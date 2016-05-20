@@ -1,7 +1,7 @@
-package com.machinomy.stox.sodium
+package com.machinomy.xicity.sodium
 
 import java.util
-import com.machinomy.stox.Hex
+import com.machinomy.xicity.Hex
 
 case class PublicKey(bytes: Array[Byte]) extends Key {
   override def hashCode(): Int = util.Arrays.hashCode(bytes)

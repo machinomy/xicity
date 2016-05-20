@@ -1,4 +1,4 @@
-package com.machinomy.stox
+package com.machinomy.xicity
 
 object Hex {
   def decode(hex: String): Array[Byte] =

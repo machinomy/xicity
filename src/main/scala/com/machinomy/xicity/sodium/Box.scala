@@ -1,4 +1,4 @@
-package com.machinomy.stox.sodium
+package com.machinomy.xicity.sodium
 
 object Box {
   /** The encryption function takes a Combined Key, a Nonce, and a Plain Text, and

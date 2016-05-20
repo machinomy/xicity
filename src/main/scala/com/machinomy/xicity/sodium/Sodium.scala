@@ -1,4 +1,4 @@
-package com.machinomy.stox.sodium
+package com.machinomy.xicity.sodium
 
 import scala.util.Random
 

@@ -1,10 +1,10 @@
-import com.machinomy.stox.Hex
-import com.machinomy.stox.sodium._
+import com.machinomy.xicity.Hex
+import com.machinomy.xicity.sodium._
 
 val a = Sodium.newKeypair.get
 val b = Sodium.newKeypair.get
 
-val ck = CombinedKey.precompute(a.secretKey, b.publicKey).get
+val ck = Sodium.precomputeCombinedKey(a.secretKey, b.publicKey).get
 val nonce = Sodium.newNonce
 val text = PlainText("foo".getBytes)
 

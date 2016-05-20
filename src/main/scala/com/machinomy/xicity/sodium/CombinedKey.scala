@@ -1,3 +1,3 @@
-package com.machinomy.stox.sodium
+package com.machinomy.xicity.sodium
 
 case class CombinedKey(bytes: Array[Byte]) extends Key

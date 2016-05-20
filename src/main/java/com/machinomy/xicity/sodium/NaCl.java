@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.machinomy.stox.sodium;
+package com.machinomy.xicity.sodium;
 
 import jnr.ffi.LibraryLoader;
 import jnr.ffi.annotations.In;
