@@ -11,7 +11,6 @@ object checkPeerB extends App {
   val maybePeer = Peer.build(new Number160(0xfb))
   maybePeer.onSuccess { case peer =>
     peer.reply { (sender, bytes) =>
-      println(bytes.toList)
       "WORD".getBytes
     }
   }

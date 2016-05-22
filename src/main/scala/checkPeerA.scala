@@ -15,8 +15,10 @@ object checkPeerA extends App {
   val maybePeer = Peer.build(selfNumber)
   Thread.sleep(2000)
   maybePeer.onSuccess { case peer =>
-    println(peer)
-    val a = peer.request(new Number160(0xfb), "Hello".getBytes)
-    println(a)
+    val message = "Hello"
+    println(s"Sending $message")
+    val a = peer.request(new Number160(0xfb), message.getBytes).getOrElse(Array.empty)
+    val receivedString = a.map(_.toChar).mkString
+    println(s"Received $receivedString")
   }
 }

@@ -17,17 +17,16 @@ import scala.collection.mutable
 
 case class Peer(client: net.tomp2p.p2p.Peer, dhtClient: PeerDHT) {
 
-  def request(number: Number160, message: Array[Byte]): mutable.Map[PeerAddress, AnyRef] = {
+  def request(number: Number160, message: Array[Byte]): Option[Array[Byte]] = {
     val requestP2PConfiguration: RequestP2PConfiguration = new RequestP2PConfiguration(1, 10, 0)
     val futureSend = dhtClient.send(number).`object`(message).requestP2PConfiguration(requestP2PConfiguration).start()
     futureSend.awaitUninterruptibly()
-    futureSend.rawDirectData2().asScala
+    futureSend.rawDirectData2().values().headOption.map(_.asInstanceOf[Array[Byte]])
   }
 
   def reply(f: (PeerAddress, Array[Byte]) => AnyRef): Unit = {
     dhtClient.peer.objectDataReply(new ObjectDataReply {
       override def reply(sender: PeerAddress, request: scala.Any): AnyRef = {
-        println(request)
         f(sender, request.asInstanceOf[Array[Byte]])
       }
     })
