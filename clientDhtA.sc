@@ -3,7 +3,7 @@ import java.util.Random
 
 import net.tomp2p.connection.{Bindings, DefaultConnectionConfiguration, DiscoverNetworks}
 import net.tomp2p.dht.PeerBuilderDHT
-import net.tomp2p.p2p.PeerBuilder
+import net.tomp2p.p2p.{PeerBuilder, RequestP2PConfiguration}
 import net.tomp2p.peers.{Number160, PeerAddress}
 import net.tomp2p.storage.Data
 
@@ -12,7 +12,7 @@ import scala.collection.JavaConversions._
 val PORT = 9333
 val WELL_KNOWN_IP = "192.168.50.4"
 
-val number = new Number160(new Random())
+val number = new Number160(0xFA)
 val bindings = new Bindings().listenAny()
 val client = new PeerBuilder(number).ports(PORT).bindings(bindings).start()
 println(s"Client started, listening to ${DiscoverNetworks.discoverInterfaces(bindings)}")
@@ -30,15 +30,23 @@ futureBootstrap.awaitUninterruptibly()
 
 val addresses = client.peerBean().peerMap().all()
 println(s"${addresses.toString}")
-
+Thread.sleep(2*1000)
 if (futureDiscover.isSuccess) {
   println("found that my outside address is " + futureDiscover.peerAddress)
   val dhtPeer = new PeerBuilderDHT(client).start()
-  val dataToPut = s"data: ${new Random().nextInt()}"
-  println(dataToPut)
-  dhtPeer.put(new Number160(10)).data(new Data(dataToPut)).start().awaitUninterruptibly()
+  //val dataToPut = s"data: ${new Random().nextInt()}"
+  //println(dataToPut)
+  //dhtPeer.put(new Number160(10)).data(new Data(dataToPut)).start().awaitUninterruptibly()
+  val requestP2PConfiguration = new RequestP2PConfiguration(1, 10, 0);
+  val futureSend = dhtPeer.send(new Number160(0xfb)).`object`("HELLO").requestP2PConfiguration(requestP2PConfiguration).start()
+  futureSend.awaitUninterruptibly()
+  if (futureSend.isSuccess) {
+    println(futureSend.rawDirectData2().values().toList)
+  } else {
+    println("Something went wrong")
+  }
+
   Thread.sleep(10000)
 } else {
   println("failed " + futureDiscover.failedReason)
 }
-client.shutdown()

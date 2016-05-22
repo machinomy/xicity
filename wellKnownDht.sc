@@ -16,10 +16,10 @@ val master = new PeerBuilderDHT(new PeerBuilder(serverNumber).ports(PORT).bindin
 println(s"Started listening to ${DiscoverNetworks.discoverInterfaces(bindings)}")
 println(s"outside address is ${master.peerAddress()}")
 
+val dht = master.get(new Number160(10)).start()
+dht.awaitUninterruptibly()
 while(true) {
   println("Another Iteration")
-  val dht = master.get(new Number160(10)).start()
-  dht.awaitUninterruptibly()
   if (dht.data() != null) {
     println(dht.data().`object`())
   }

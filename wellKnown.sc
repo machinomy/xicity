@@ -25,9 +25,9 @@ while(true) {
     futureTcpResponse.awaitUninterruptibly()
 
     if (futureTcpResponse.isSuccess) {
-      println(s"Peer $peerAddress is online/tcp")
+      println(s"PeerJ $peerAddress is online/tcp")
     } else {
-      println(s"Peer $peerAddress is offline/tcp")
+      println(s"PeerJ $peerAddress is offline/tcp")
     }
 
     val futureUdpResponse = master.pingRPC().pingUDP(peerAddress, channelCreator, new DefaultConnectionConfiguration())
@@ -35,9 +35,9 @@ while(true) {
     channelCreator.shutdown()
 
     if (futureUdpResponse.isSuccess) {
-      println(s"Peer $peerAddress is online/udp")
+      println(s"PeerJ $peerAddress is online/udp")
     } else {
-      println(s"Peer $peerAddress is offline/udp")
+      println(s"PeerJ $peerAddress is offline/udp")
     }
   }
   Thread.sleep(1500)
