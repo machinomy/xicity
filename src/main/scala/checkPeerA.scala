@@ -13,7 +13,6 @@ import scala.util.Success
 object checkPeerA extends App {
   val selfNumber = new Number160(0xfa)
   val maybePeer = Peer.build(selfNumber)
-  Thread.sleep(2000)
   maybePeer.onSuccess { case peer =>
     val message = "Hello"
     println(s"Sending $message")
