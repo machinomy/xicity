@@ -11,5 +11,5 @@ object Identifier {
 
   def isOk(peerIdentifier: Identifier): Boolean = peerIdentifier.n.toByteArray.length <= BYTES_LENGTH
 
-  def random: Identifier = Identifier(new Random().nextLong())
+  def random: Identifier = Identifier(math.abs(new Random().nextLong()))
 }
