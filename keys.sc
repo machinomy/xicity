@@ -1,12 +1,14 @@
 import com.machinomy.xicity.Hex
 import com.machinomy.xicity.sodium._
 
-val a = Sodium.newKeypair.get
-val b = Sodium.newKeypair.get
+val alice = Sodium.newKeypair.get
+val bob = Sodium.newKeypair.get
 
-val ck = Sodium.precomputeCombinedKey(a.secretKey, b.publicKey).get
+val ck = Sodium.precomputeCombinedKey(alice.secretKey, bob.publicKey).get
 val nonce = Sodium.newNonce
-val text = PlainText("foo".getBytes)
+val text = PlainText("Hello, World!".getBytes)
+
+
 
 val cipher = Box.encrypt(ck, nonce, text).get
 Hex.encode(cipher.bytes)
