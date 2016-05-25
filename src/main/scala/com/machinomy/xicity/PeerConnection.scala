@@ -7,8 +7,14 @@ import akka.io.{IO, Tcp}
 import scala.concurrent.duration._
 import akka.util.ByteString
 import com.machinomy.xicity.protocol._
+import akka.pattern._
+
+import scala.util.Random
 
 class PeerConnection(node: ActorRef) extends FSM[PeerConnection.State, PeerConnection.Data] with ActorLogging {
+
+  implicit val timeout: akka.util.Timeout = akka.util.Timeout(30.seconds)
+  implicit val executionContext = context.system.dispatcher
 
   startWith(PeerConnection.Initial, PeerConnection.NoData)
 
@@ -30,8 +36,27 @@ class PeerConnection(node: ActorRef) extends FSM[PeerConnection.State, PeerConne
       parse(byteString) {
         case v: VersionPayload if v.nonce == state.nonce =>
           log.info(s"Received correct VersionPayload reply")
+          log.info(s"Going to ask for Pex")
+          val nonce = new Random().nextLong()
+          for {
+            identifiers <- node.ask(PeerNode.GetKnownIdentifiersCommand).mapTo[Set[Identifier]]
+            identifier <- node.ask(PeerNode.GetIdentifierCommand).mapTo[Identifier]
+          } {
+            state.connectionData.wire ! Tcp.Write(ByteString(WiredPayload.toBytes(PexPayload(nonce, identifiers + identifier))))
+          }
+          goto(PeerConnection.WaitingForPexPayloadReply) using PeerConnection.WaitingForPexPayloadData(nonce, state.connectionData)
+        case v: VersionPayload => stop(Failure(s"Expected VersionPayload nonce to be ${state.nonce}, got ${v.nonce}"))
+      }
+  }
+
+  when(PeerConnection.WaitingForPexPayloadReply) {
+    case Event(Tcp.Received(byteString), state: PeerConnection.WaitingForPexPayloadData) =>
+      parse(byteString) {
+        case v: PexPayload if v.nonce == state.nonce =>
+          log.info(s"Received correct Pex payload: $v")
+          node ! PeerNode.AddRoutingTableCommand(state.connectionData.remoteConnector, v.ids)
           goto(PeerConnection.Connected) using state.connectionData
-        case v: VersionPayload => stop(Failure(s"Expected VersionPayload nonce to be ${state.nonce}"))
+        case v: PexPayload => stop(Failure(s"Expected PexPayload nonce to be ${state.nonce}, got ${v.nonce}"))
       }
   }
 
@@ -43,11 +68,16 @@ class PeerConnection(node: ActorRef) extends FSM[PeerConnection.State, PeerConne
           log.info(s"Replied using $versionPayloadReply to $remoteConnector")
           state.wire ! Tcp.Write(ByteString(WiredPayload.toBytes(versionPayloadReply)))
           stay
-        case v @ Pex(nonce, ids) =>
+        case v @ PexPayload(nonce, ids) =>
           log.info(s"Got $ids from ${state.remoteConnector}")
-          state.wire ! Tcp.Write(ByteString(WiredPayload.toBytes(Pex(nonce, Set.empty))))
+          node ! PeerNode.AddRoutingTableCommand(state.remoteConnector, ids)
+          for {
+            identifiers <- node.ask(PeerNode.GetKnownIdentifiersCommand).mapTo[Set[Identifier]]
+            identifier <- node.ask(PeerNode.GetIdentifierCommand).mapTo[Identifier]
+          } {
+            state.wire ! Tcp.Write(ByteString(WiredPayload.toBytes(PexPayload(nonce, identifiers + identifier))))
+          }
           stay
-
       }
   }
 
@@ -88,11 +118,13 @@ object PeerConnection {
   case object Initial extends State
   case object Connected extends State
   case object WaitingForVersionPayloadReply extends State
+  case object WaitingForPexPayloadReply extends State
 
   sealed trait Data
   case object NoData extends Data
   case class ConnectionData(wire: ActorRef, remoteConnector: Connector, localConnector: Connector) extends Data
   case class WaitingForVersionPayloadData(nonce: Long, connectionData: ConnectionData) extends Data
+  case class WaitingForPexPayloadData(nonce: Long, connectionData: ConnectionData) extends Data
 
   def props(node: ActorRef): Props = Props(classOf[PeerConnection], node)
 }

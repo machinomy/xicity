@@ -12,6 +12,8 @@ case class RoutingTable(mapping: Map[Connector, Set[Identifier]]) {
     val identifiers = mapping.getOrElse(m._1, Set.empty)
     RoutingTable(mapping.updated(m._1, identifiers -- m._2))
   }
+
+  def identifiers: Set[Identifier] = mapping.values.fold(Set.empty) { case (a, b) => a ++ b }
 }
 
 object RoutingTable {

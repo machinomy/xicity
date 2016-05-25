@@ -7,7 +7,7 @@ object WiredPayload {
 
   val nameToCodec: Map[String, Codec[_]] = Map(
     VersionPayload.name -> new Payload.Codec[VersionPayload],
-    Pex.name -> new Payload.Codec[Pex]
+    PexPayload.name -> new Payload.Codec[PexPayload]
   )
 
   def fromBytes(bytes: Array[Byte]): Option[Payload] = {

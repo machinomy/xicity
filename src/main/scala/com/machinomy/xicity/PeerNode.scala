@@ -10,7 +10,9 @@ class PeerNode(identifier: Identifier) extends Actor with ActorLogging {
   var herdOpt: Option[ActorRef] = None
   var routingTable: RoutingTable = RoutingTable.empty
 
-  override def receive: Receive = serverReceive orElse clientReceive
+  log.info(s"Starting PeerNode($identifier)")
+
+  override def receive: Receive = serverReceive orElse clientReceive orElse peerReceive
 
   def serverReceive: Receive = {
     case e: PeerNode.StartServerCommand =>
@@ -33,6 +35,18 @@ class PeerNode(identifier: Identifier) extends Actor with ActorLogging {
       herdOpt = Some(herd)
   }
 
+  def peerReceive: Receive = {
+    case PeerNode.AddRoutingTableCommand(connector, ids) =>
+      log.info(s"Add $ids for $connector to RoutingTable, $identifier")
+      val nextRoutingTable = routingTable + (connector -> ids.filterNot(_ == identifier))
+      log.info(s"Updated routing table for $identifier is $nextRoutingTable")
+      routingTable = nextRoutingTable
+    case PeerNode.GetKnownIdentifiersCommand =>
+      sender ! routingTable.identifiers
+    case PeerNode.GetIdentifierCommand =>
+      sender ! identifier
+  }
+
   def random(n: Int, set: Set[Connector]): Set[Connector] = Random.shuffle(set.toIndexedSeq).take(n).toSet
 }
 
@@ -40,6 +54,9 @@ object PeerNode {
   sealed trait Protocol
   case class StartServerCommand(connector: Connector) extends Protocol
   case class StartClientsCommand(threshold: Int, seeds: Set[Connector]) extends Protocol
+  case class AddRoutingTableCommand(connector: Connector, ids: Set[Identifier]) extends Protocol
+  case object GetKnownIdentifiersCommand extends Protocol
+  case object GetIdentifierCommand extends Protocol
 
   sealed trait State
   case object InitialState extends State
