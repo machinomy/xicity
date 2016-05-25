@@ -10,6 +10,8 @@ class PeerNode(identifier: Identifier) extends Actor with ActorLogging {
       val handlerFactory = () => context.actorOf(PeerConnection.props)
       server = context.actorOf(PeerServer.props(identifier, connector, handlerFactory))
       server ! PeerServer.StartCommand
+    case e: PeerServer.CanNotBind =>
+      log.warning(s"Peer Node can not be started: $e")
   }
 }
 
