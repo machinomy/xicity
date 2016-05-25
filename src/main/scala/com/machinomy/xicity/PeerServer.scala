@@ -18,9 +18,10 @@ case class PeerServer(id: Identifier, local: Connector, handlerFactory: () => Ac
   }
 
   when(PeerServer.UpstreamBound) {
-    case Event(Tcp.Bound(localAddress), upstreamData: UpstreamData) =>
+    case Event(Tcp.Bound(localAddress), data: UpstreamData) =>
       log.info(s"Bound to $localAddress")
-      goto(PeerServer.FullyBound) using PeerServer.FullyBoundData(upstreamData.upstream, sender)
+      data.upstream ! PeerServer.DidConnect(Connector(localAddress))
+      goto(PeerServer.FullyBound) using PeerServer.FullyBoundData(data.upstream, sender)
     case Event(Tcp.CommandFailed(cmd: Tcp.Bind), upstreamData: UpstreamData) =>
       println(upstreamData.upstream)
       upstreamData.upstream ! PeerServer.CanNotBind(Connector(cmd.localAddress))
@@ -52,6 +53,7 @@ object PeerServer {
   sealed trait Protocol
   case object StartCommand extends Protocol
   case class CanNotBind(connector: Connector) extends Protocol
+  case class DidConnect(connector: Connector) extends Protocol
 
   sealed trait State
   case object InitialState extends State
