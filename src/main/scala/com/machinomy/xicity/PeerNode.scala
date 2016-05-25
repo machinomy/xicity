@@ -8,13 +8,14 @@ class PeerNode(identifier: Identifier) extends Actor with ActorLogging {
 
   var serverOpt: Option[ActorRef] = None
   var herdOpt: Option[ActorRef] = None
+  var routingTable: RoutingTable = RoutingTable.empty
 
   override def receive: Receive = serverReceive orElse clientReceive
 
   def serverReceive: Receive = {
     case e: PeerNode.StartServerCommand =>
       log.info(s"Starting server for ${e.connector}")
-      val handlerFactory = () => context.actorOf(PeerConnection.props)
+      val handlerFactory = () => context.actorOf(PeerConnection.props(self))
       val server = context.actorOf(PeerServer.props(identifier, e.connector, handlerFactory))
       server ! PeerServer.StartCommand
     case c: PeerServer.DidConnect =>

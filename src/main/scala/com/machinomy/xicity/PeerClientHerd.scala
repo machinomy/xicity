@@ -12,7 +12,7 @@ class PeerClientHerd(identifier: Identifier, threshold: Int, initialSeeds: Set[C
     case PeerClientHerd.StartCommand =>
       val selected = selectSeeds(threshold)
       for (connector <- selected) {
-        val handler = context.actorOf(PeerConnection.props)
+        val handler = context.actorOf(PeerConnection.props(sender))
         val client = context.actorOf(PeerClient.props(connector, handler))
         client ! PeerClient.StartCommand
         runningClients = runningClients.updated(connector, client)

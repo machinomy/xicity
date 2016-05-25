@@ -17,7 +17,7 @@ object VersionPayload extends PayloadCompanion {
   def apply(remoteConnector: Connector): VersionPayload = new VersionPayload(remoteConnector, new Random().nextLong(), "xicity/0.1")
 }
 
-case class Pex(ids: Set[Identifier]) extends Payload(Pex.name)
+case class Pex(nonce: Long, ids: Set[Identifier]) extends Payload(Pex.name)
 object Pex extends PayloadCompanion {
   def name = "pex"
 }

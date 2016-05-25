@@ -8,7 +8,7 @@ import scala.concurrent.duration._
 import akka.util.ByteString
 import com.machinomy.xicity.protocol._
 
-class PeerConnection extends FSM[PeerConnection.State, PeerConnection.Data] with ActorLogging {
+class PeerConnection(node: ActorRef) extends FSM[PeerConnection.State, PeerConnection.Data] with ActorLogging {
 
   startWith(PeerConnection.Initial, PeerConnection.NoData)
 
@@ -43,9 +43,9 @@ class PeerConnection extends FSM[PeerConnection.State, PeerConnection.Data] with
           log.info(s"Replied using $versionPayloadReply to $remoteConnector")
           state.wire ! Tcp.Write(ByteString(WiredPayload.toBytes(versionPayloadReply)))
           stay
-        case v @ Pex(ids) =>
+        case v @ Pex(nonce, ids) =>
           log.info(s"Got $ids from ${state.remoteConnector}")
-          state.wire ! Tcp.Write(ByteString(WiredPayload.toBytes(Pex(Set.empty))))
+          state.wire ! Tcp.Write(ByteString(WiredPayload.toBytes(Pex(nonce, Set.empty))))
           stay
 
       }
@@ -94,5 +94,5 @@ object PeerConnection {
   case class ConnectionData(wire: ActorRef, remoteConnector: Connector, localConnector: Connector) extends Data
   case class WaitingForVersionPayloadData(nonce: Long, connectionData: ConnectionData) extends Data
 
-  def props: Props = Props(classOf[PeerConnection])
+  def props(node: ActorRef): Props = Props(classOf[PeerConnection], node)
 }
