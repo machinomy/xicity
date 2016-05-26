@@ -22,7 +22,7 @@ object PexPayload extends PayloadCompanion {
   def name = "pex"
 }
 
-case class SingleMessagePayload(from: Identifier, to: Identifier, text: Array[Byte]) extends Payload(SingleMessagePayload.name)
+case class SingleMessagePayload(from: Identifier, to: Identifier, text: Array[Byte], expiration: Long) extends Payload(SingleMessagePayload.name)
 object SingleMessagePayload extends PayloadCompanion {
   def name = "single"
 }

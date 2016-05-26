@@ -1,6 +1,7 @@
 package com.machinomy.xicity
 
 import akka.actor.{Actor, ActorLogging, ActorRef, FSM, Props}
+import com.github.nscala_time.time.Imports._
 
 import scala.util.Random
 
@@ -41,24 +42,27 @@ class PeerNode(identifier: Identifier) extends Actor with ActorLogging {
       val nextRoutingTable = routingTable + (connector -> ids.filterNot(_ == identifier))
       log.info(s"Updated routing table for $identifier is $nextRoutingTable")
       routingTable = nextRoutingTable
-    case PeerNode.GetKnownIdentifiersCommand =>
-      sender ! routingTable.identifiers
+    case PeerNode.GetKnownIdentifiersCommand(connector) =>
+      sender ! (routingTable - connector).identifiers
     case PeerNode.GetIdentifierCommand =>
       sender ! identifier
     case cmd: PeerNode.SendSingleMessageCommand =>
       val closestConnectors: Set[Connector] = routingTable.closestConnectors(cmd.to, identifier)
       log.info(s"For ${cmd.to} found the closest connectors: $closestConnectors")
-      herdOpt.foreach { actorRef =>
-        actorRef ! PeerClientHerd.SendSingleMessageCommand(closestConnectors, cmd.from, cmd.to, cmd.text)
+      log.info(routingTable.toString)
+      if (cmd.expiration > DateTime.now.getMillis / 1000) {
+        herdOpt.foreach { actorRef =>
+          actorRef ! PeerClientHerd.SendSingleMessageCommand(closestConnectors, cmd.from, cmd.to, cmd.text, cmd.expiration)
+        }
+        serverOpt.foreach { actorRef =>
+          actorRef ! PeerServer.SendSingleMessageCommand(closestConnectors, cmd.from, cmd.to, cmd.text, cmd.expiration)
+        }
       }
-      serverOpt.foreach { actorRef =>
-        actorRef ! PeerServer.SendSingleMessageCommand(closestConnectors, cmd.from, cmd.to, cmd.text)
-      }
-    case PeerNode.ReceivedSingleMessage(from, to, text) =>
+    case PeerNode.ReceivedSingleMessage(from, to, text, passed) =>
       if (to == identifier) {
         log.info(s"Received new single message: $text")
       } else {
-        self ! PeerNode.SendSingleMessageCommand(from, to, text)
+        self ! PeerNode.SendSingleMessageCommand(from, to, text, passed)
       }
   }
 
@@ -70,10 +74,10 @@ object PeerNode {
   case class StartServerCommand(connector: Connector) extends Protocol
   case class StartClientsCommand(threshold: Int, seeds: Set[Connector]) extends Protocol
   case class AddRoutingTableCommand(connector: Connector, ids: Set[Identifier]) extends Protocol
-  case object GetKnownIdentifiersCommand extends Protocol
+  case class GetKnownIdentifiersCommand(minus: Connector) extends Protocol
   case object GetIdentifierCommand extends Protocol
-  case class SendSingleMessageCommand(from: Identifier, to: Identifier, text: Array[Byte]) extends Protocol
-  case class ReceivedSingleMessage(from: Identifier, to: Identifier, text: Array[Byte]) extends Protocol
+  case class SendSingleMessageCommand(from: Identifier, to: Identifier, text: Array[Byte], expiration: Long) extends Protocol
+  case class ReceivedSingleMessage(from: Identifier, to: Identifier, text: Array[Byte], expiration: Long) extends Protocol
 
   sealed trait State
   case object InitialState extends State

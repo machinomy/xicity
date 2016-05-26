@@ -26,7 +26,10 @@ case class RoutingTable(mapping: Map[Connector, Set[Identifier]]) {
   }
 
   def closestConnectors(id: Identifier, selfId: Identifier, n: Int = 1): Set[Connector] = {
-    val closestIds = reverseMapping.keys.toSeq.sortBy(i => Identifier.distance(i, id)).take(n).toSet - selfId
+    val a = reverseMapping.keys.toSeq.sortBy(i => Identifier.distance(i, id))
+    println(id)
+    println(a)
+    val closestIds = a.take(n).toSet - selfId
     closestIds.flatMap(id => reverseMapping.getOrElse(id, Set.empty))
   }
 }

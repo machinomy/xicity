@@ -44,7 +44,7 @@ case class PeerServer(id: Identifier, local: Connector, handlerFactory: () => Ac
         handler <- runningClients.get(connector)
       } {
         log.info(s"Sending Single Message to $connector")
-        handler ! PeerConnection.SingleMessage(cmd.from, cmd.to, cmd.text)
+        handler ! PeerConnection.SingleMessage(cmd.from, cmd.to, cmd.text, cmd.expiration)
       }
       stay
   }
@@ -65,7 +65,7 @@ object PeerServer {
   case object StartCommand extends Protocol
   case class CanNotBind(connector: Connector) extends Protocol
   case class DidConnect(connector: Connector) extends Protocol
-  case class SendSingleMessageCommand(closestConnectors: Set[Connector], from: Identifier, to: Identifier, text: Array[Byte]) extends Protocol
+  case class SendSingleMessageCommand(closestConnectors: Set[Connector], from: Identifier, to: Identifier, text: Array[Byte], expiration: Long) extends Protocol
 
   sealed trait State
   case object InitialState extends State
