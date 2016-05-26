@@ -6,7 +6,10 @@ object PeerNodeStarter {
     import com.machinomy.xicity.{Connector, Identifier, PeerNode}
     val system = ActorSystem()
     val identifier = Identifier.random
-    val peerNode = system.actorOf(PeerNode.props(identifier))
+    def receiver(from: Identifier, to: Identifier, msg: Array[Byte], exp: Long) = {
+      println("µµµµµµµµµµµ")
+    }
+    val peerNode = system.actorOf(PeerNode.props(identifier, receiver))
     peerNode ! PeerNode.StartServerCommand(Connector("0.0.0.0"))
     val seeds = Set(Connector("45.55.122.116"))
     peerNode ! PeerNode.StartClientsCommand(2, seeds)
