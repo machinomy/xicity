@@ -6,8 +6,5 @@ object PeerNodeStarter {
     val system = ActorSystem()
     val peerNode = system.actorOf(PeerNode.props(Identifier.random))
     peerNode ! PeerNode.StartServerCommand(Connector("localhost"))
-
-    val peerNode2 = system.actorOf(PeerNode.props(Identifier.random))
-    peerNode2 ! PeerNode.StartServerCommand(Connector("localhost", 9343))
   }
 }

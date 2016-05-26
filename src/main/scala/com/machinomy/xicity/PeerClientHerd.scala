@@ -17,6 +17,14 @@ class PeerClientHerd(identifier: Identifier, threshold: Int, initialSeeds: Set[C
         client ! PeerClient.StartCommand
         runningClients = runningClients.updated(connector, client)
       }
+    case cmd: PeerClientHerd.SendSingleMessageCommand =>
+      log.info(s"Sending $cmd")
+      for {
+        connector <- cmd.connectors
+        client <- runningClients.get(connector)
+      } {
+        client ! PeerClient.SendSingleMessageCommand(cmd. from, cmd.to, cmd.text)
+      }
   }
 
   def selectSeeds(n: Int = 1) = Random.shuffle(seeds.toIndexedSeq).take(n)
@@ -25,6 +33,7 @@ class PeerClientHerd(identifier: Identifier, threshold: Int, initialSeeds: Set[C
 object PeerClientHerd {
   sealed trait Protocol
   case object StartCommand extends Protocol
+  case class SendSingleMessageCommand(connectors: Set[Connector], from: Identifier, to: Identifier, text: Array[Byte]) extends Protocol
 
   def props(identifier: Identifier, threshold: Int, initialSeeds: Set[Connector]): Props =
     Props(classOf[PeerClientHerd], identifier, threshold, initialSeeds)

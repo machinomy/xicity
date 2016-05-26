@@ -45,6 +45,21 @@ class PeerNode(identifier: Identifier) extends Actor with ActorLogging {
       sender ! routingTable.identifiers
     case PeerNode.GetIdentifierCommand =>
       sender ! identifier
+    case cmd: PeerNode.SendSingleMessageCommand =>
+      val closestConnectors: Set[Connector] = routingTable.closestConnectors(cmd.to, identifier)
+      log.info(s"For ${cmd.to} found the closest connectors: $closestConnectors")
+      herdOpt.foreach { actorRef =>
+        actorRef ! PeerClientHerd.SendSingleMessageCommand(closestConnectors, cmd.from, cmd.to, cmd.text)
+      }
+      serverOpt.foreach { actorRef =>
+        actorRef ! PeerServer.SendSingleMessageCommand(closestConnectors, cmd.from, cmd.to, cmd.text)
+      }
+    case PeerNode.ReceivedSingleMessage(from, to, text) =>
+      if (to == identifier) {
+        log.info(s"Received new single message: $text")
+      } else {
+        self ! PeerNode.SendSingleMessageCommand(from, to, text)
+      }
   }
 
   def random(n: Int, set: Set[Connector]): Set[Connector] = Random.shuffle(set.toIndexedSeq).take(n).toSet
@@ -57,6 +72,8 @@ object PeerNode {
   case class AddRoutingTableCommand(connector: Connector, ids: Set[Identifier]) extends Protocol
   case object GetKnownIdentifiersCommand extends Protocol
   case object GetIdentifierCommand extends Protocol
+  case class SendSingleMessageCommand(from: Identifier, to: Identifier, text: Array[Byte]) extends Protocol
+  case class ReceivedSingleMessage(from: Identifier, to: Identifier, text: Array[Byte]) extends Protocol
 
   sealed trait State
   case object InitialState extends State

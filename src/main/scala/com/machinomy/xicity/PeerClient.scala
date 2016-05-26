@@ -18,6 +18,8 @@ class PeerClient(remote: Connector, handler: ActorRef) extends Actor with ActorL
       connection ! Tcp.Register(handler)
       log.info(s"OutgoingConnection to $remoteAddress")
       handler ! PeerConnection.OutgoingConnection(connection, Connector(remoteAddress), Connector(localAddress))
+    case cmd: PeerClient.SendSingleMessageCommand =>
+      handler ! PeerConnection.SingleMessage(cmd.from, cmd.to, cmd.text)
     case e =>
       log.warning(e.toString)
   }
@@ -26,6 +28,7 @@ class PeerClient(remote: Connector, handler: ActorRef) extends Actor with ActorL
 object PeerClient {
   sealed trait Protocol
   case object StartCommand extends Protocol
+  case class SendSingleMessageCommand(from: Identifier, to: Identifier, text: Array[Byte]) extends Protocol
 
   def props(remote: Connector, handler: ActorRef): Props = Props(classOf[PeerClient], remote, handler)
 }

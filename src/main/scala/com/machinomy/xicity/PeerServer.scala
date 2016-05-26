@@ -6,6 +6,7 @@ import akka.io.{IO, Tcp}
 import com.machinomy.xicity.PeerServer.UpstreamData
 
 case class PeerServer(id: Identifier, local: Connector, handlerFactory: () => ActorRef) extends FSM[PeerServer.State, PeerServer.Data] with ActorLogging {
+  var runningClients: Map[Connector, ActorRef] = Map.empty
   import context.system
 
   startWith(PeerServer.InitialState, PeerServer.NoData)
@@ -34,8 +35,18 @@ case class PeerServer(id: Identifier, local: Connector, handlerFactory: () => Ac
       val handler = handlerFactory()
       connection ! Tcp.Register(handler)
       log.info(s"Incoming connection from $remoteAddress")
+      runningClients = runningClients.updated(Connector(remoteAddress), handler)
       handler ! PeerConnection.IncomingConnection(connection, Connector(remoteAddress), Connector(localAddress))
       stay()
+    case Event(cmd: PeerServer.SendSingleMessageCommand, data: PeerServer.FullyBoundData) =>
+      val handlers = for {
+        connector <- cmd.closestConnectors
+        handler <- runningClients.get(connector)
+      } {
+        log.info(s"Sending Single Message to $connector")
+        handler ! PeerConnection.SingleMessage(cmd.from, cmd.to, cmd.text)
+      }
+      stay
   }
 
   whenUnhandled {
@@ -54,6 +65,7 @@ object PeerServer {
   case object StartCommand extends Protocol
   case class CanNotBind(connector: Connector) extends Protocol
   case class DidConnect(connector: Connector) extends Protocol
+  case class SendSingleMessageCommand(closestConnectors: Set[Connector], from: Identifier, to: Identifier, text: Array[Byte]) extends Protocol
 
   sealed trait State
   case object InitialState extends State

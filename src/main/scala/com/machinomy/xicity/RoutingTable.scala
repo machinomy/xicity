@@ -14,6 +14,21 @@ case class RoutingTable(mapping: Map[Connector, Set[Identifier]]) {
   }
 
   def identifiers: Set[Identifier] = mapping.values.fold(Set.empty) { case (a, b) => a ++ b }
+
+  lazy val reverseMapping: Map[Identifier, Set[Connector]] = {
+    val explosion: Map[Identifier, Connector] = for {
+      (c, ids) <- mapping
+      id <- ids
+    } yield (id, c)
+    explosion.foldLeft(Map.empty[Identifier, Set[Connector]]) { case (acc, (id, c)) =>
+        acc.updated(id, acc.getOrElse(id, Set.empty) + c)
+    }
+  }
+
+  def closestConnectors(id: Identifier, selfId: Identifier, n: Int = 1): Set[Connector] = {
+    val closestIds = reverseMapping.keys.toSeq.sortBy(i => Identifier.distance(i, id)).take(n).toSet - selfId
+    closestIds.flatMap(id => reverseMapping.getOrElse(id, Set.empty))
+  }
 }
 
 object RoutingTable {

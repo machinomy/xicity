@@ -12,4 +12,6 @@ object Identifier {
   def isOk(peerIdentifier: Identifier): Boolean = peerIdentifier.n.toByteArray.length <= BYTES_LENGTH
 
   def random: Identifier = Identifier(math.abs(new Random().nextLong()))
+
+  def distance(a: Identifier, b: Identifier): BigInt = a.n ^ b.n
 }
