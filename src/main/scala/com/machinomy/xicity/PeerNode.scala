@@ -5,7 +5,7 @@ import com.github.nscala_time.time.Imports._
 
 import scala.util.Random
 
-class PeerNode(identifier: Identifier) extends Actor with ActorLogging {
+class PeerNode(identifier: Identifier, rcv: (Identifier, Identifier, Array[Byte], Long) => Unit) extends Actor with ActorLogging {
 
   var serverOpt: Option[ActorRef] = None
   var herdOpt: Option[ActorRef] = None
@@ -58,11 +58,12 @@ class PeerNode(identifier: Identifier) extends Actor with ActorLogging {
           actorRef ! PeerServer.SendSingleMessageCommand(closestConnectors, cmd.from, cmd.to, cmd.text, cmd.expiration)
         }
       }
-    case PeerNode.ReceivedSingleMessage(from, to, text, passed) =>
+    case PeerNode.ReceivedSingleMessage(from, to, text, expiration) =>
       if (to == identifier) {
         log.info(s"Received new single message: $text")
+        rcv(from, to, text, expiration)
       } else {
-        self ! PeerNode.SendSingleMessageCommand(from, to, text, passed)
+        self ! PeerNode.SendSingleMessageCommand(from, to, text, expiration)
       }
   }
 
@@ -90,5 +91,5 @@ object PeerNode {
   case class ServerData(server: ActorRef) extends Data
 
 
-  def props(identifier: Identifier) = Props(classOf[PeerNode], identifier)
+  def props(identifier: Identifier, rcv: (Identifier, Identifier, Array[Byte], Long) => Unit) = Props(classOf[PeerNode], identifier, rcv)
 }
