@@ -7,7 +7,7 @@ import akka.io.{IO, Tcp}
 import scala.concurrent.duration._
 import akka.util.ByteString
 import com.machinomy.xicity.protocol._
-import akka.pattern._
+import akka.pattern.ask
 
 import scala.util.Random
 
