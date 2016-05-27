@@ -4,6 +4,8 @@ version := "0.1"
 
 scalaVersion := "2.11.8"
 
+organization := "com.machinomy"
+
 resolvers ++= Seq(
   "tomp2p.net" at "http://tomp2p.net/dev/mvn/"
 )
