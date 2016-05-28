@@ -63,15 +63,10 @@ class PeerConnection(node: ActorRef) extends FSM[PeerConnection.State, PeerConne
         case PexPayload(ids) =>
           log.info(s"Got $ids from ${state.remoteConnector}")
           node ! PeerNode.AddRoutingTableCommand(state.remoteConnector, ids)
-          sendPex(state)
           stay
         case SingleMessagePayload(from, to, text, expiration) =>
           log.info(s"GOT SINGLE MESSAGE PAYLOAD: $from, $to, $text")
           node ! PeerNode.ReceivedSingleMessage(from, to, text, expiration)
-          stay
-        case v: PexPayload =>
-          //log.info(s"Received Pex payload: $v")
-          node ! PeerNode.AddRoutingTableCommand(state.remoteConnector, v.ids)
           stay
       }
     case Event(PeerConnection.SingleMessage(from, to, text, expiration), state: PeerConnection.ConnectionData) =>
