@@ -5,7 +5,7 @@ import com.github.nscala_time.time.Imports._
 
 import scala.util.Random
 
-class PeerNode(identifier: Identifier, rcv: (Identifier, Identifier, Array[Byte], Long) => Unit) extends Actor with ActorLogging {
+class PeerNode(identifier: Identifier, logic: ActorRef) extends Actor with ActorLogging {
 
   var serverOpt: Option[ActorRef] = None
   var herdOpt: Option[ActorRef] = None
@@ -24,6 +24,8 @@ class PeerNode(identifier: Identifier, rcv: (Identifier, Identifier, Array[Byte]
     case c: PeerServer.DidConnect =>
       log.info(s"Serving at ${c.connector}")
       serverOpt = Some(sender)
+      println(logic)
+      logic ! PeerNode.DidStart(self)
     case e: PeerServer.CanNotBind =>
       log.warning(s"Peer Node can not be started: $e")
   }
@@ -34,6 +36,7 @@ class PeerNode(identifier: Identifier, rcv: (Identifier, Identifier, Array[Byte]
       val herd = context.actorOf(PeerClientHerd.props(identifier, cmd.threshold, cmd.seeds))
       herd ! PeerClientHerd.StartCommand
       herdOpt = Some(herd)
+      logic ! PeerNode.DidStart(self)
   }
 
   def peerReceive: Receive = {
@@ -58,10 +61,10 @@ class PeerNode(identifier: Identifier, rcv: (Identifier, Identifier, Array[Byte]
           actorRef ! PeerServer.SendSingleMessageCommand(closestConnectors, cmd.from, cmd.to, cmd.text, cmd.expiration)
         }
       }
-    case PeerNode.ReceivedSingleMessage(from, to, text, expiration) =>
+    case cmd @ PeerNode.ReceivedSingleMessage(from, to, text, expiration) =>
       if (to == identifier) {
         log.info(s"Received new single message: $text")
-        rcv(from, to, text, expiration)
+        logic ! cmd
       } else {
         self ! PeerNode.SendSingleMessageCommand(from, to, text, expiration)
       }
@@ -80,6 +83,8 @@ object PeerNode {
   case class SendSingleMessageCommand(from: Identifier, to: Identifier, text: Array[Byte], expiration: Long) extends Protocol
   case class ReceivedSingleMessage(from: Identifier, to: Identifier, text: Array[Byte], expiration: Long) extends Protocol
 
+  case class DidStart(node: ActorRef) extends Protocol
+
   sealed trait State
   case object InitialState extends State
   case object ServerState extends State
@@ -91,5 +96,5 @@ object PeerNode {
   case class ServerData(server: ActorRef) extends Data
 
 
-  def props(identifier: Identifier, rcv: (Identifier, Identifier, Array[Byte], Long) => Unit) = Props(classOf[PeerNode], identifier, rcv)
+  def props(identifier: Identifier, logic: ActorRef) = Props(classOf[PeerNode], identifier, logic)
 }
