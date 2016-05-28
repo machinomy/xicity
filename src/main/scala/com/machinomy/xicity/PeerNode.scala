@@ -24,8 +24,6 @@ class PeerNode(identifier: Identifier, logic: ActorRef) extends Actor with Actor
     case c: PeerServer.DidConnect =>
       log.info(s"Serving at ${c.connector}")
       serverOpt = Some(sender)
-      println(logic)
-      logic ! PeerNode.DidStart(self)
     case e: PeerServer.CanNotBind =>
       log.warning(s"Peer Node can not be started: $e")
   }
@@ -36,7 +34,6 @@ class PeerNode(identifier: Identifier, logic: ActorRef) extends Actor with Actor
       val herd = context.actorOf(PeerClientHerd.props(identifier, cmd.threshold, cmd.seeds))
       herd ! PeerClientHerd.StartCommand
       herdOpt = Some(herd)
-      logic ! PeerNode.DidStart(self)
   }
 
   def peerReceive: Receive = {
@@ -44,6 +41,9 @@ class PeerNode(identifier: Identifier, logic: ActorRef) extends Actor with Actor
       log.info(s"Add $ids for $connector to RoutingTable, $identifier")
       val nextRoutingTable = routingTable + (connector -> ids.filterNot(_ == identifier))
       log.info(s"Updated routing table for $identifier is $nextRoutingTable")
+      if (routingTable.mapping.isEmpty && nextRoutingTable.mapping.nonEmpty) {
+        logic ! PeerNode.DidStart(self)
+      }
       routingTable = nextRoutingTable
     case PeerNode.GetKnownIdentifiersCommand(connector) =>
       sender ! (routingTable - connector).identifiers
