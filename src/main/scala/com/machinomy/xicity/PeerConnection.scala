@@ -46,7 +46,7 @@ class PeerConnection(node: ActorRef) extends FSM[PeerConnection.State, PeerConne
     case Event(Tcp.Received(byteString), state: PeerConnection.WaitingForPexPayloadData) =>
       parse(byteString) {
         case v: PexPayload =>
-          log.info(s"Received Pex payload: $v")
+          //log.info(s"Received Pex payload: $v")
           node ! PeerNode.AddRoutingTableCommand(state.connectionData.remoteConnector, v.ids)
           goto(PeerConnection.Connected) using state.connectionData
       }
@@ -103,6 +103,7 @@ class PeerConnection(node: ActorRef) extends FSM[PeerConnection.State, PeerConne
         }
       case None => {
         val string = bytes.map(_.toChar).mkString
+        log error s"Expected payload, got $string"
         stop(Failure(s"Expected payload, got $string"))
       }
     }
@@ -111,7 +112,7 @@ class PeerConnection(node: ActorRef) extends FSM[PeerConnection.State, PeerConne
   def parse(byteString: ByteString)(f: PartialFunction[Payload, State]): State = parse(byteString.toArray)(f)
 
   def sendPex(connectionData: PeerConnection.ConnectionData) = {
-    log.info(s"Going to ask for Pex")
+    //log.info(s"Going to ask for Pex")
     for {
       identifiers <- node.ask(PeerNode.GetKnownIdentifiersCommand(connectionData.remoteConnector)).mapTo[Set[Identifier]]
       identifier <- node.ask(PeerNode.GetIdentifierCommand).mapTo[Identifier]
