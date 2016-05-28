@@ -3,7 +3,7 @@ import com.github.nscala_time.time.Imports._
 
 object PeerNodeStarter {
   def main() = {
-    import akka.actor.ActorSystem
+    import akka.actor._
     import com.machinomy.xicity.{Connector, Identifier, PeerNode}
     val system = ActorSystem()
 
