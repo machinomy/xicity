@@ -70,7 +70,9 @@ class PeerConnection(node: ActorRef) extends FSM[PeerConnection.State, PeerConne
           stay
       }
     case Event(PeerConnection.SingleMessage(from, to, text, expiration), state: PeerConnection.ConnectionData) =>
-      state.wire ! Tcp.Write(ByteString(WiredPayload.toBytes(SingleMessagePayload(from, to, text, expiration))))
+      val p = ByteString(WiredPayload.toBytes(SingleMessagePayload(from, to, text, expiration)))
+      println(s"Sending ${p.size} payload")
+      state.wire ! Tcp.Write(p)
       stay
     case Event(StateTimeout, state: PeerConnection.ConnectionData) =>
       sendPex(state)
@@ -92,6 +94,7 @@ class PeerConnection(node: ActorRef) extends FSM[PeerConnection.State, PeerConne
   initialize()
 
   def parse(bytes: Array[Byte])(f: PartialFunction[Payload, State]): State = {
+    println(s"Received ${bytes.length}")
     WiredPayload.fromBytes(bytes) match {
       case Some(payload) =>
         if (f.isDefinedAt(payload)) {
