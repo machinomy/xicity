@@ -76,6 +76,9 @@ class PeerConnection(node: ActorRef) extends FSM[PeerConnection.State, PeerConne
     case Event(StateTimeout, state: PeerConnection.ConnectionData) =>
       sendPex(state)
       goto(PeerConnection.WaitingForPexPayloadReply) using PeerConnection.WaitingForPexPayloadData(state)
+    case Event(e, f) =>
+      log.info(s"DEBUG: ${e.toString}, ${f.toString}")
+      stay
   }
 
   whenUnhandled {
