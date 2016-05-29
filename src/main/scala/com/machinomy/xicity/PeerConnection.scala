@@ -91,7 +91,7 @@ class PeerConnection(node: ActorRef) extends FSM[PeerConnection.State, PeerConne
 
   initialize()
 
-  def parse(bytes: Array[Byte])(f: PartialFunction[Payload, State]): State = {
+  def parse(bytes: Array[Byte])(f: PartialFunction[JavaPayload, State]): State = {
     WiredPayload.fromBytes(bytes) match {
       case Some(payload) =>
         if (f.isDefinedAt(payload)) {
@@ -108,7 +108,7 @@ class PeerConnection(node: ActorRef) extends FSM[PeerConnection.State, PeerConne
     }
   }
 
-  def parse(byteString: ByteString)(f: PartialFunction[Payload, State]): State = parse(byteString.toArray)(f)
+  def parse(byteString: ByteString)(f: PartialFunction[JavaPayload, State]): State = parse(byteString.toArray)(f)
 
   def sendPex(connectionData: PeerConnection.ConnectionData) = {
     //log.info(s"Going to ask for Pex")

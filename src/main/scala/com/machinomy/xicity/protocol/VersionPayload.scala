@@ -7,7 +7,7 @@ import scala.util.Random
 
 case class VersionPayload(remoteConnector: Connector,
                           nonce: Long,
-                          userAgent: String) extends Payload(VersionPayload.name)
+                          userAgent: String) extends JavaPayload(VersionPayload.name)
 
 object VersionPayload extends PayloadCompanion {
   val name = "version"
