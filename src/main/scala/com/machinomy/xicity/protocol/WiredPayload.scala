@@ -1,14 +1,14 @@
 package com.machinomy.xicity.protocol
 
-import com.machinomy.xicity.protocol.Payload.Codec
+import com.machinomy.xicity.protocol.Payload.JavaCodec
 
 object WiredPayload {
   val NAME_FIELD_LENGTH = 12
 
-  val nameToCodec: Map[String, Codec[_]] = Map(
-    VersionPayload.name -> new Payload.Codec[VersionPayload],
-    PexPayload.name -> new Payload.Codec[PexPayload],
-    SingleMessagePayload.name -> new Payload.Codec[SingleMessagePayload]
+  val nameToCodec: Map[String, JavaCodec[_]] = Map(
+    VersionPayload.name -> new Payload.JavaCodec[VersionPayload],
+    PexPayload.name -> new Payload.JavaCodec[PexPayload],
+    SingleMessagePayload.name -> new Payload.JavaCodec[SingleMessagePayload]
   )
 
   def fromBytes(bytes: Array[Byte]): Option[Payload] = {
