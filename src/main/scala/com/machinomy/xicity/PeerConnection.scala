@@ -113,20 +113,6 @@ class PeerConnection(node: ActorRef) extends FSM[PeerConnection.State, PeerConne
         log.error(cause.toString, "Expected payload")
         stop(Failure(s"Expected payload, got ${cause.toString}"))
     }
-//    WiredPayload.fromBytes(bytes) match {
-//      case Some(payload) =>
-//        if (f.isDefinedAt(payload)) {
-//          f(payload)
-//        } else {
-//          log.warning(s"Can not handle $payload")
-//          stay
-//        }
-//      case None => {
-//        val string = bytes.map(_.toChar).mkString
-//        log error s"Expected payload, got $string"
-//        stop(Failure(s"Expected payload, got $string"))
-//      }
-//    }
   }
 
   def parse(byteString: ByteString)(f: PartialFunction[Payload, State]): State = parse(byteString.toArray)(f)
@@ -137,7 +123,7 @@ class PeerConnection(node: ActorRef) extends FSM[PeerConnection.State, PeerConne
       identifiers <- node.ask(PeerNode.GetKnownIdentifiersCommand(connectionData.remoteConnector)).mapTo[Set[Identifier]]
       identifier <- node.ask(PeerNode.GetIdentifierCommand).mapTo[Identifier]
     } {
-      connectionData.wire ! Tcp.Write(ByteString(WiredPayload.toBytes(Payload.PexPayload(identifiers + identifier))))
+      write(connectionData.wire, Payload.PexPayload(identifiers + identifier))
     }
   }
 }
