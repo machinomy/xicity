@@ -10,6 +10,7 @@ class PeerNode(identifier: Identifier, logic: ActorRef) extends Actor with Actor
   var serverOpt: Option[ActorRef] = None
   var herdOpt: Option[ActorRef] = None
   var routingTable: RoutingTable = RoutingTable.empty
+  var started = false
 
   log.info(s"Starting PeerNode($identifier)")
 
@@ -44,7 +45,10 @@ class PeerNode(identifier: Identifier, logic: ActorRef) extends Actor with Actor
       val routingTableWasEmpty = routingTable.mapping.isEmpty
       routingTable = nextRoutingTable
       if (routingTableWasEmpty && nextRoutingTable.mapping.nonEmpty) {
-        logic ! PeerNode.DidStart(self)
+        if (!started) {
+          logic ! PeerNode.DidStart(self)
+          started = true
+        }
       }
     case PeerNode.RemoveRoutingTableCommand(connector) =>
       log.info(s"Removing routing for $connector")
