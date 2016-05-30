@@ -6,10 +6,8 @@ import com.machinomy.xicity.{Connector, Identifier}
 
 import scala.util.{Random, Try}
 
-abstract class JavaPayload(val name: String) extends Serializable
-
 object JavaPayload {
-  class JavaCodec[A <: JavaPayload] {
+  class JavaCodec[A <: Payload] {
     def fromBytes[A](bytes: Array[Byte]) = {
       val byteArrayInputStream = new ByteArrayInputStream(bytes)
       val objectInputStream = new ObjectInputStream(byteArrayInputStream)
