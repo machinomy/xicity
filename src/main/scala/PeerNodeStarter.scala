@@ -21,7 +21,7 @@ object PeerNodeStarter {
 
     val logic = system.actorOf(Props(classOf[Logic]))
     println(logic)
-    val identifier = Identifier(200)
+    val identifier = Identifier.random
     println(identifier)
     val peerNode = system.actorOf(PeerNode.props(identifier, logic))
     peerNode ! PeerNode.StartServerCommand(Connector("0.0.0.0"))

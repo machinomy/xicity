@@ -46,6 +46,10 @@ class PeerNode(identifier: Identifier, logic: ActorRef) extends Actor with Actor
       if (routingTableWasEmpty && nextRoutingTable.mapping.nonEmpty) {
         logic ! PeerNode.DidStart(self)
       }
+    case PeerNode.RemoveRoutingTableCommand(connector) =>
+      log.info(s"Removing routing for $connector")
+      routingTable -= connector
+      log.info(s"New routing table: $routingTable")
     case PeerNode.GetKnownIdentifiersCommand(connector) =>
       sender ! (routingTable - connector).identifiers
     case PeerNode.GetIdentifierCommand =>
@@ -79,6 +83,7 @@ object PeerNode {
   case class StartServerCommand(connector: Connector) extends Protocol
   case class StartClientsCommand(threshold: Int, seeds: Set[Connector]) extends Protocol
   case class AddRoutingTableCommand(connector: Connector, ids: Set[Identifier]) extends Protocol
+  case class RemoveRoutingTableCommand(connector: Connector) extends Protocol
   case class GetKnownIdentifiersCommand(minus: Connector) extends Protocol
   case object GetIdentifierCommand extends Protocol
   case class SendSingleMessageCommand(from: Identifier, to: Identifier, text: Array[Byte], expiration: Long) extends Protocol

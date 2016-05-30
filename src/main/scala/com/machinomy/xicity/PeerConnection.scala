@@ -77,21 +77,33 @@ class PeerConnection(node: ActorRef) extends FSM[PeerConnection.State, PeerConne
     case Event(StateTimeout, state: PeerConnection.ConnectionData) =>
       sendPex(state)
       stay
+    case Event(Tcp.PeerClosed, state: PeerConnection.ConnectionData) =>
+      node ! PeerNode.RemoveRoutingTableCommand(state.remoteConnector)
+      stop(FSM.Shutdown)
     case Event(e, f) =>
       log.info(s"DEBUG: ${e.toString}, ${f.toString}")
       stay
   }
 
   whenUnhandled {
-    case Event(Tcp.PeerClosed, _) =>
-      log.info(s"Stopping peer connection: received Tcp.PeerClosed")
-      stop(Normal)
+    case Event(Tcp.PeerClosed, state: PeerConnection.ConnectionData) =>
+      stopOnPeerClose(state.remoteConnector)
+    case Event(Tcp.PeerClosed, state: PeerConnection.WaitingForPexPayloadData) =>
+      stopOnPeerClose(state.connectionData.remoteConnector)
+    case Event(Tcp.PeerClosed, state: PeerConnection.WaitingForVersionPayloadData) =>
+      stopOnPeerClose(state.connectionData.remoteConnector)
     case Event(e, s) =>
       log.warning(s"Received $e while having $s in $stateName")
       stay
   }
 
   initialize()
+
+  def stopOnPeerClose(connector: Connector): State = {
+    log.info(s"Stopping peer connection: received Tcp.PeerClosed")
+    node ! PeerNode.RemoveRoutingTableCommand(connector)
+    stop(FSM.Shutdown)
+  }
 
   def write[A <: Payload](tcp: ActorRef, payload: A) = {
     tcp ! Tcp.Write(ByteString(WiredPayload.toBytes(payload)))
