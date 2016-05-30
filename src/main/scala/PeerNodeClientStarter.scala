@@ -1,6 +1,7 @@
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
 import com.machinomy.xicity.{Connector, Identifier, PeerNode}
 import com.github.nscala_time.time.Imports._
+import com.machinomy.xicity.protocol.Payload
 
 object PeerNodeClientStarter {
   def main() = {
@@ -8,12 +9,13 @@ object PeerNodeClientStarter {
     import com.machinomy.xicity.{Connector, Identifier, PeerNode}
     import com.github.nscala_time.time.Imports._
 
+    val identifier = new Identifier(34)
+
     class Logic extends Actor with ActorLogging {
       var peerNodeRef: ActorRef = null
       override def receive: Receive = {
         case PeerNode.DidStart(n) =>
           peerNodeRef = n
-          log info "DID START"
         case cmd @ PeerNode.ReceivedSingleMessage(from, to, text, expiration) =>
           log info "RECEVIEDRECEIVED"
           log info cmd.toString
@@ -22,11 +24,26 @@ object PeerNodeClientStarter {
     }
 
     val system = ActorSystem()
-    val identifier = new Identifier(34)
+
     val logic = system.actorOf(Props(classOf[Logic]))
     val peerNode = system.actorOf(PeerNode.props(identifier, logic))
-    val seeds = Set(Connector("localhost"))
+    val seeds = Set(Connector("0.0.0.0"))
     peerNode ! PeerNode.StartClientsCommand(2, seeds)
+
+    val msg = Payload.SingleMessagePayload(
+      from = identifier,
+      to = Identifier(200),
+      text = s"HELLO".getBytes,
+      expiration = DateTime.now.getMillis / 1000 + 60
+    )
+    for (i <- 1 to 10) {
+      peerNode ! PeerNode.SendSingleMessageCommand(
+        from = identifier,
+        to = Identifier(200),
+        text = s"HELLO $i".getBytes,
+        expiration = DateTime.now.getMillis / 1000 + 60
+      )
+    }
   }
 
   def nodeB() = {
