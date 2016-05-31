@@ -18,7 +18,6 @@ class PeerClientHerd(identifier: Identifier, threshold: Int, initialSeeds: Set[C
         runningClients = runningClients.updated(connector, client)
       }
     case cmd: PeerClientHerd.SendSingleMessageCommand =>
-      println(s"sssssssssssssssssssssssssss Sending $cmd")
       for {
         connector <- cmd.connectors
         client <- runningClients.get(connector)
