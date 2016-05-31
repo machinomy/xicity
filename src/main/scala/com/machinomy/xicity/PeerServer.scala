@@ -36,6 +36,7 @@ case class PeerServer(id: Identifier, local: Connector, handlerFactory: () => Ac
       connection ! Tcp.Register(handler)
       log.info(s"Incoming connection from $remoteAddress")
       runningClients = runningClients.updated(Connector(remoteAddress), handler)
+      data.upstream ! PeerNode.AddRunningClient(Connector(remoteAddress), handler)
       handler ! PeerConnection.IncomingConnection(connection, Connector(remoteAddress), Connector(localAddress))
       stay()
     case Event(cmd: PeerServer.SendSingleMessageCommand, data: PeerServer.FullyBoundData) =>
