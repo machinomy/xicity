@@ -120,10 +120,9 @@ object Payload {
 
   val identifierCodec: Codec[Identifier] = new Codec[Identifier] {
     val bytesCodec = bytes(Identifier.BYTES_LENGTH)
-
     override def encode(value: Identifier): Attempt[BitVector] =
       for {
-        bytes <- bytesCodec.encode(ByteVector(value.n))
+        bytes <- bytesCodec.encode(ByteVector(value.n.toByteArray).padLeft(Identifier.BYTES_LENGTH))
       } yield bytes
 
     override def sizeBound: SizeBound = bytesCodec.sizeBound
@@ -132,7 +131,7 @@ object Payload {
       for {
         bigIntBytesR <- bytesCodec.decode(bits)
         bigIntBytes = bigIntBytesR.value.toArray
-      } yield DecodeResult(Identifier(BigInt(bigIntBytes.reverse)), bigIntBytesR.remainder)
+      } yield DecodeResult(Identifier(BigInt(bigIntBytes)), bigIntBytesR.remainder)
   }
 
   implicit val codec: Codec[Payload] =
