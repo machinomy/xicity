@@ -2,11 +2,12 @@ package com.machinomy.xicity
 
 import akka.actor.{Actor, ActorLogging, ActorRef, FSM, Props}
 import com.github.nscala_time.time.Imports._
+import scala.collection.mutable
 
 import scala.util.Random
 
 class PeerNode(identifier: Identifier, logic: ActorRef) extends Actor with ActorLogging {
-
+  val runningClients: mutable.Map[Connector, ActorRef] = mutable.Map.empty
   var serverOpt: Option[ActorRef] = None
   var herdOpt: Option[ActorRef] = None
   var routingTable: RoutingTable = RoutingTable.empty
@@ -55,6 +56,13 @@ class PeerNode(identifier: Identifier, logic: ActorRef) extends Actor with Actor
       log.info(s"Removing routing for $connector")
       routingTable -= connector
       log.info(s"New routing table: $routingTable")
+    case PeerNode.AddRunningClient(connector, client) =>
+      log.info(s"Adding running client for $connector...")
+      runningClients += (connector -> client)
+      log.info(s"Added running client for $connector")
+    case PeerNode.RemoveRunningClient(connector) =>
+      log.info(s"Remove running client for $connector")
+      runningClients -= connector
     case PeerNode.GetKnownIdentifiersCommand(connector) =>
       sender ! (routingTable - connector).identifiers
     case PeerNode.GetIdentifierCommand =>
@@ -89,6 +97,8 @@ object PeerNode {
   case class StartClientsCommand(threshold: Int, seeds: Set[Connector]) extends Protocol
   case class AddRoutingTableCommand(connector: Connector, ids: Set[Identifier]) extends Protocol
   case class RemoveRoutingTableCommand(connector: Connector) extends Protocol
+  case class AddRunningClient(connector: Connector, client: ActorRef) extends Protocol
+  case class RemoveRunningClient(connector: Connector) extends Protocol
   case class GetKnownIdentifiersCommand(minus: Connector) extends Protocol
   case object GetIdentifierCommand extends Protocol
   case class SendSingleMessageCommand(from: Identifier, to: Identifier, text: Array[Byte], expiration: Long) extends Protocol

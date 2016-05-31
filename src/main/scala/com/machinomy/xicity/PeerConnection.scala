@@ -79,6 +79,7 @@ class PeerConnection(node: ActorRef) extends FSM[PeerConnection.State, PeerConne
       stay
     case Event(Tcp.PeerClosed, state: PeerConnection.ConnectionData) =>
       node ! PeerNode.RemoveRoutingTableCommand(state.remoteConnector)
+      node ! PeerNode.RemoveRunningClient(state.remoteConnector)
       stop(FSM.Shutdown)
     case Event(e, f) =>
       log.info(s"DEBUG: ${e.toString}, ${f.toString}")
@@ -102,6 +103,7 @@ class PeerConnection(node: ActorRef) extends FSM[PeerConnection.State, PeerConne
   def stopOnPeerClose(connector: Connector): State = {
     log.info(s"Stopping peer connection: received Tcp.PeerClosed")
     node ! PeerNode.RemoveRoutingTableCommand(connector)
+    node ! PeerNode.RemoveRunningClient(connector)
     stop(FSM.Shutdown)
   }
 

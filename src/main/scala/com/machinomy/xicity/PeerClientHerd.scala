@@ -11,11 +11,13 @@ class PeerClientHerd(identifier: Identifier, handlerFactory: () => ActorRef, thr
   override def receive: Receive = {
     case PeerClientHerd.StartCommand =>
       val selected = selectSeeds(threshold)
+      val node = sender()
       for (connector <- selected) {
-        val handler = context.actorOf(PeerConnection.props(sender))
+        val handler = context.actorOf(PeerConnection.props(node))
         val client = context.actorOf(PeerClient.props(connector, handler))
         client ! PeerClient.StartCommand
-        runningClients = runningClients.updated(connector, client)
+        node ! PeerNode.AddRunningClient(connector, client)
+        runningClients = runningClients + (connector -> client)
       }
     case cmd: PeerClientHerd.SendSingleMessageCommand =>
       for {
