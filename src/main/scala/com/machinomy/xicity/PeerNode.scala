@@ -72,16 +72,16 @@ class PeerNode(identifier: Identifier, logic: ActorRef) extends Actor with Actor
       log.info(s"For ${cmd.to} found the closest connectors: $closestConnectors")
       log.info(routingTable.toString)
       if (cmd.expiration > DateTime.now.getMillis / 1000) {
-        herdOpt.foreach { actorRef =>
-          actorRef ! PeerClientHerd.SendSingleMessageCommand(closestConnectors, cmd.from, cmd.to, cmd.text, cmd.expiration)
-        }
-        serverOpt.foreach { actorRef =>
-          actorRef ! PeerServer.SendSingleMessageCommand(closestConnectors, cmd.from, cmd.to, cmd.text, cmd.expiration)
+        for {
+          connector <- closestConnectors
+          client <- runningClients.get(connector)
+        } {
+          client ! PeerClient.SendSingleMessageCommand(cmd. from, cmd.to, cmd.text, cmd.expiration)
         }
       }
     case cmd @ PeerNode.ReceivedSingleMessage(from, to, text, expiration) =>
       if (to == identifier) {
-        log.info(s"Received new single message: $text")
+        log.info(s"RECEIVED NEW SINGLE MESSAGE: $text")
         logic ! cmd
       } else {
         self ! PeerNode.SendSingleMessageCommand(from, to, text, expiration)

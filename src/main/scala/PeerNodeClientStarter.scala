@@ -30,18 +30,19 @@ object PeerNodeClientStarter {
     val seeds = Set(Connector("0.0.0.0"))
     peerNode ! PeerNode.StartClientsCommand(2, seeds)
 
-    val msg = Payload.SingleMessagePayload(
+    val msg = PeerNode.SendSingleMessageCommand(
       from = identifier,
-      to = Identifier(200),
+      to = Identifier(BigInt("3708120315101760066")),
       text = s"HELLO".getBytes,
-      expiration = DateTime.now.getMillis / 1000 + 60
+      expiration = DateTime.now.getMillis / 1000 + 6000
     )
+    peerNode ! msg
     for (i <- 1 to 10) {
       peerNode ! PeerNode.SendSingleMessageCommand(
         from = identifier,
-        to = Identifier(200),
-        text = s"HELLO $i".getBytes,
-        expiration = DateTime.now.getMillis / 1000 + 60
+        to = Identifier(BigInt("3708120315101760066")),
+        text = s"HELLO".getBytes,
+        expiration = DateTime.now.getMillis / 1000 + 600
       )
     }
   }

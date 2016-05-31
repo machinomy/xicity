@@ -74,6 +74,9 @@ class PeerConnection(node: ActorRef) extends FSM[PeerConnection.State, PeerConne
     case Event(PeerConnection.SingleMessage(from, to, text, expiration), state: PeerConnection.ConnectionData) =>
       write(state.wire, Payload.SingleMessagePayload(from, to, text, expiration))
       stay
+    case Event(PeerNode.SendSingleMessageCommand(from, to, text, expiration), state: PeerConnection.ConnectionData) =>
+      write(state.wire, Payload.SingleMessagePayload(from, to, text, expiration))
+      stay
     case Event(StateTimeout, state: PeerConnection.ConnectionData) =>
       sendPex(state)
       stay
