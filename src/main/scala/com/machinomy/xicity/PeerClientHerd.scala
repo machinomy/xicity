@@ -4,7 +4,7 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 
 import scala.util.Random
 
-class PeerClientHerd(identifier: Identifier, threshold: Int, initialSeeds: Set[Connector]) extends Actor with ActorLogging {
+class PeerClientHerd(identifier: Identifier, handlerFactory: () => ActorRef, threshold: Int, initialSeeds: Set[Connector]) extends Actor with ActorLogging {
   var runningClients: Map[Connector, ActorRef] = Map.empty
   var seeds: Set[Connector] = initialSeeds
 
@@ -34,6 +34,6 @@ object PeerClientHerd {
   case object StartCommand extends Protocol
   case class SendSingleMessageCommand(connectors: Set[Connector], from: Identifier, to: Identifier, text: Array[Byte], expiration: Long) extends Protocol
 
-  def props(identifier: Identifier, threshold: Int, initialSeeds: Set[Connector]): Props =
-    Props(classOf[PeerClientHerd], identifier, threshold, initialSeeds)
+  def props(identifier: Identifier, handlerFactory: () => ActorRef, threshold: Int, initialSeeds: Set[Connector]): Props =
+    Props(classOf[PeerClientHerd], identifier, handlerFactory, threshold, initialSeeds)
 }

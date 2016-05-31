@@ -32,7 +32,8 @@ class PeerNode(identifier: Identifier, logic: ActorRef) extends Actor with Actor
   def clientReceive: Receive = {
     case cmd: PeerNode.StartClientsCommand =>
       log.info(s"Starting clients herd")
-      val herd = context.actorOf(PeerClientHerd.props(identifier, cmd.threshold, cmd.seeds))
+      val handlerFactory = () => context.actorOf(PeerConnection.props(self))
+      val herd = context.actorOf(PeerClientHerd.props(identifier, handlerFactory, cmd.threshold, cmd.seeds))
       herd ! PeerClientHerd.StartCommand
       herdOpt = Some(herd)
   }
