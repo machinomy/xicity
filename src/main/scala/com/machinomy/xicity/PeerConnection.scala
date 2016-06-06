@@ -8,7 +8,7 @@ import scala.concurrent.duration._
 import akka.util.ByteString
 import com.machinomy.xicity.protocol._
 import akka.pattern.ask
-import com.machinomy.xicity.connectivity.Connector
+import com.machinomy.xicity.connectivity.Endpoint
 import com.machinomy.xicity.protocol.Payload.Discriminator
 import scodec.{Attempt, DecodeResult}
 
@@ -104,7 +104,7 @@ class PeerConnection(node: ActorRef) extends FSM[PeerConnection.State, PeerConne
 
   initialize()
 
-  def stopOnPeerClose(connector: Connector): State = {
+  def stopOnPeerClose(connector: Endpoint): State = {
     log.info(s"Stopping peer connection: received Tcp.PeerClosed")
     node ! PeerNode.RemoveRoutingTableCommand(connector)
     node ! PeerNode.RemoveRunningClient(connector)
@@ -148,8 +148,8 @@ class PeerConnection(node: ActorRef) extends FSM[PeerConnection.State, PeerConne
 
 object PeerConnection {
   sealed trait Protocol
-  case class OutgoingConnection(tcp: ActorRef, remote: Connector, local: Connector) extends Protocol
-  case class IncomingConnection(tcp: ActorRef, remote: Connector, local: Connector) extends Protocol
+  case class OutgoingConnection(tcp: ActorRef, remote: Endpoint, local: Endpoint) extends Protocol
+  case class IncomingConnection(tcp: ActorRef, remote: Endpoint, local: Endpoint) extends Protocol
   case class SingleMessage(from: Identifier, to: Identifier, text: Array[Byte], expiration: Long) extends Protocol
 
   sealed trait State
@@ -160,7 +160,7 @@ object PeerConnection {
 
   sealed trait Data
   case object NoData extends Data
-  case class ConnectionData(wire: ActorRef, remoteConnector: Connector, localConnector: Connector) extends Data
+  case class ConnectionData(wire: ActorRef, remoteConnector: Endpoint, localConnector: Endpoint) extends Data
   case class WaitingForVersionPayloadData(nonce: Long, connectionData: ConnectionData) extends Data
   case class WaitingForPexPayloadData(connectionData: ConnectionData) extends Data
 

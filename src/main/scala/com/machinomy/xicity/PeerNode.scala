@@ -2,13 +2,13 @@ package com.machinomy.xicity
 
 import akka.actor.{Actor, ActorLogging, ActorRef, FSM, Props}
 import com.github.nscala_time.time.Imports._
-import com.machinomy.xicity.connectivity.Connector
+import com.machinomy.xicity.connectivity.Endpoint
 
 import scala.collection.mutable
 import scala.util.Random
 
 class PeerNode(identifier: Identifier, logic: ActorRef) extends Actor with ActorLogging {
-  val runningClients: mutable.Map[Connector, ActorRef] = mutable.Map.empty
+  val runningClients: mutable.Map[Endpoint, ActorRef] = mutable.Map.empty
   var serverOpt: Option[ActorRef] = None
   var herdOpt: Option[ActorRef] = None
   var routingTable: RoutingTable = RoutingTable.empty
@@ -69,7 +69,7 @@ class PeerNode(identifier: Identifier, logic: ActorRef) extends Actor with Actor
     case PeerNode.GetIdentifierCommand =>
       sender ! identifier
     case cmd: PeerNode.SendSingleMessageCommand =>
-      val closestConnectors: Set[Connector] = routingTable.closestConnectors(cmd.to, identifier)
+      val closestConnectors: Set[Endpoint] = routingTable.closestConnectors(cmd.to, identifier)
       log.info(s"For ${cmd.to} found the closest connectors: $closestConnectors")
       log.info(routingTable.toString)
       if (cmd.expiration > DateTime.now.getMillis / 1000) {
@@ -89,18 +89,18 @@ class PeerNode(identifier: Identifier, logic: ActorRef) extends Actor with Actor
       }
   }
 
-  def random(n: Int, set: Set[Connector]): Set[Connector] = Random.shuffle(set.toIndexedSeq).take(n).toSet
+  def random(n: Int, set: Set[Endpoint]): Set[Endpoint] = Random.shuffle(set.toIndexedSeq).take(n).toSet
 }
 
 object PeerNode {
   sealed trait Protocol
-  case class StartServerCommand(connector: Connector) extends Protocol
-  case class StartClientsCommand(threshold: Int, seeds: Set[Connector]) extends Protocol
-  case class AddRoutingTableCommand(connector: Connector, ids: Set[Identifier]) extends Protocol
-  case class RemoveRoutingTableCommand(connector: Connector) extends Protocol
-  case class AddRunningClient(connector: Connector, client: ActorRef) extends Protocol
-  case class RemoveRunningClient(connector: Connector) extends Protocol
-  case class GetKnownIdentifiersCommand(minus: Connector) extends Protocol
+  case class StartServerCommand(connector: Endpoint) extends Protocol
+  case class StartClientsCommand(threshold: Int, seeds: Set[Endpoint]) extends Protocol
+  case class AddRoutingTableCommand(connector: Endpoint, ids: Set[Identifier]) extends Protocol
+  case class RemoveRoutingTableCommand(connector: Endpoint) extends Protocol
+  case class AddRunningClient(connector: Endpoint, client: ActorRef) extends Protocol
+  case class RemoveRunningClient(connector: Endpoint) extends Protocol
+  case class GetKnownIdentifiersCommand(minus: Endpoint) extends Protocol
   case object GetIdentifierCommand extends Protocol
   case class SendSingleMessageCommand(from: Identifier, to: Identifier, text: Array[Byte], expiration: Long) extends Protocol
   case class ReceivedSingleMessage(from: Identifier, to: Identifier, text: Array[Byte], expiration: Long) extends Protocol

@@ -1,6 +1,7 @@
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
 import com.machinomy.xicity.{Identifier, PeerNode}
 import com.github.nscala_time.time.Imports._
+import com.machinomy.xicity.connectivity.Endpoint
 import com.machinomy.xicity.protocol.Payload
 
 object PeerNodeClientStarter {
@@ -27,7 +28,7 @@ object PeerNodeClientStarter {
 
     val logic = system.actorOf(Props(classOf[Logic]))
     val peerNode = system.actorOf(PeerNode.props(identifier, logic))
-    val seeds = Set(Connector("0.0.0.0"))
+    val seeds = Set(Endpoint("0.0.0.0"))
     peerNode ! PeerNode.StartClientsCommand(2, seeds)
 
     val msg = PeerNode.SendSingleMessageCommand(
@@ -67,7 +68,7 @@ object PeerNodeClientStarter {
     val logic = system.actorOf(Props(classOf[Logic]))
     val identifier = Identifier(100)
     val peerNode = system.actorOf(PeerNode.props(identifier, logic))
-    val seeds = Set(Connector("45.55.122.116"))
+    val seeds = Set(Endpoint("45.55.122.116"))
     peerNode ! PeerNode.StartClientsCommand(2, seeds)
     val cmd = PeerNode.SendSingleMessageCommand(identifier, new Identifier(34), "foo".getBytes, DateTime.now.getMillis / 1000 + 5)
     peerNode ! cmd
@@ -95,7 +96,7 @@ object PeerNodeClientStarter {
     val identifier = new Identifier(0xfa)
     val logic = system.actorOf(Props(classOf[Logic]))
     val peerNode = system.actorOf(PeerNode.props(identifier, logic))
-    val seeds = Set(Connector("localhost"))
+    val seeds = Set(Endpoint("localhost"))
     peerNode ! PeerNode.StartClientsCommand(2, seeds)
   }
 }

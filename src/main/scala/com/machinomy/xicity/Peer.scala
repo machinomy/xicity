@@ -1,13 +1,13 @@
 package com.machinomy.xicity
 
-import com.machinomy.xicity.connectivity.Connector
+import com.machinomy.xicity.connectivity.Endpoint
 
 import scala.concurrent.Future
 
 class Peer(identifier: Identifier)
 
 object Peer {
-  def build(identifier: Identifier, seeds: Set[Connector]): Future[Peer] = {
+  def build(identifier: Identifier, seeds: Set[Endpoint]): Future[Peer] = {
     Future.failed(new Exception())
   }
 

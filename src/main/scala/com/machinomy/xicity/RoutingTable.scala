@@ -1,33 +1,33 @@
 package com.machinomy.xicity
 
-import com.machinomy.xicity.connectivity.Connector
+import com.machinomy.xicity.connectivity.Endpoint
 
-case class RoutingTable(mapping: Map[Connector, Set[Identifier]]) {
-  def +(m: (Connector, Set[Identifier])): RoutingTable = {
+case class RoutingTable(mapping: Map[Endpoint, Set[Identifier]]) {
+  def +(m: (Endpoint, Set[Identifier])): RoutingTable = {
     val identifiers = mapping.getOrElse(m._1, Set.empty)
     RoutingTable(mapping.updated(m._1, identifiers ++ m._2))
   }
 
-  def -(c: Connector): RoutingTable = RoutingTable(mapping - c)
+  def -(c: Endpoint): RoutingTable = RoutingTable(mapping - c)
 
-  def -(m: (Connector, Set[Identifier])): RoutingTable = {
+  def -(m: (Endpoint, Set[Identifier])): RoutingTable = {
     val identifiers = mapping.getOrElse(m._1, Set.empty)
     RoutingTable(mapping.updated(m._1, identifiers -- m._2))
   }
 
   def identifiers: Set[Identifier] = mapping.values.fold(Set.empty) { case (a, b) => a ++ b }
 
-  lazy val reverseMapping: Map[Identifier, Set[Connector]] = {
-    val explosion: Map[Identifier, Connector] = for {
+  lazy val reverseMapping: Map[Identifier, Set[Endpoint]] = {
+    val explosion: Map[Identifier, Endpoint] = for {
       (c, ids) <- mapping
       id <- ids
     } yield (id, c)
-    explosion.foldLeft(Map.empty[Identifier, Set[Connector]]) { case (acc, (id, c)) =>
+    explosion.foldLeft(Map.empty[Identifier, Set[Endpoint]]) { case (acc, (id, c)) =>
         acc.updated(id, acc.getOrElse(id, Set.empty) + c)
     }
   }
 
-  def closestConnectors(id: Identifier, selfId: Identifier, n: Int = 1): Set[Connector] = {
+  def closestConnectors(id: Identifier, selfId: Identifier, n: Int = 1): Set[Endpoint] = {
     val a = reverseMapping.keys.toSeq.sortBy(i => Identifier.distance(i, id))
     println(id)
     println(a)
