@@ -2,6 +2,7 @@ package com.machinomy.xicity
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.io.{IO, Tcp}
+import com.machinomy.xicity.connectivity.Connector
 
 class PeerClient(remote: Connector, handler: ActorRef) extends Actor with ActorLogging {
   import context.system

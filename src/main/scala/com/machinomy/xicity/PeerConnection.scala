@@ -8,6 +8,7 @@ import scala.concurrent.duration._
 import akka.util.ByteString
 import com.machinomy.xicity.protocol._
 import akka.pattern.ask
+import com.machinomy.xicity.connectivity.Connector
 import com.machinomy.xicity.protocol.Payload.Discriminator
 import scodec.{Attempt, DecodeResult}
 

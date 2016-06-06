@@ -1,12 +1,12 @@
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
-import com.machinomy.xicity.{Connector, Identifier, PeerNode}
+import com.machinomy.xicity.{Identifier, PeerNode}
 import com.github.nscala_time.time.Imports._
 import com.machinomy.xicity.protocol.Payload
 
 object PeerNodeClientStarter {
   def main() = {
     import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
-    import com.machinomy.xicity.{Connector, Identifier, PeerNode}
+    import com.machinomy.xicity.{Identifier, PeerNode}
     import com.github.nscala_time.time.Imports._
 
     val identifier = new Identifier(34)
@@ -49,7 +49,7 @@ object PeerNodeClientStarter {
 
   def nodeB() = {
     import akka.actor.ActorSystem
-    import com.machinomy.xicity.{Connector, Identifier, PeerNode}
+    import com.machinomy.xicity.{Identifier, PeerNode}
     import com.github.nscala_time.time.Imports._
     val system = ActorSystem()
 
@@ -76,7 +76,7 @@ object PeerNodeClientStarter {
 
   def nodeC() = {
     import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
-    import com.machinomy.xicity.{Connector, Identifier, PeerNode}
+    import com.machinomy.xicity.{Identifier, PeerNode}
     import com.github.nscala_time.time.Imports._
 
     class Logic extends Actor with ActorLogging {

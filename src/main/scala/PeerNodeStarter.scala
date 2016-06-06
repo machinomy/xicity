@@ -4,7 +4,7 @@ import com.github.nscala_time.time.Imports._
 object PeerNodeStarter {
   def main() = {
     import akka.actor._
-    import com.machinomy.xicity.{Connector, Identifier, PeerNode}
+    import com.machinomy.xicity.{Identifier, PeerNode}
     val system = ActorSystem()
 
     class Logic extends Actor with ActorLogging {

@@ -1,4 +1,4 @@
-package com.machinomy.xicity
+package com.machinomy.xicity.connectivity
 
 import java.net.{InetAddress, InetSocketAddress}
 

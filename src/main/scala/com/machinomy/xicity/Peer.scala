@@ -1,5 +1,7 @@
 package com.machinomy.xicity
 
+import com.machinomy.xicity.connectivity.Connector
+
 import scala.concurrent.Future
 
 class Peer(identifier: Identifier)

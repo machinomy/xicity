@@ -1,5 +1,7 @@
 package com.machinomy.xicity
 
+import com.machinomy.xicity.connectivity.Connector
+
 case class RoutingTable(mapping: Map[Connector, Set[Identifier]]) {
   def +(m: (Connector, Set[Identifier])): RoutingTable = {
     val identifiers = mapping.getOrElse(m._1, Set.empty)

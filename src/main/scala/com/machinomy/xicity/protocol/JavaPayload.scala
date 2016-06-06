@@ -2,7 +2,7 @@ package com.machinomy.xicity.protocol
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream, ObjectInputStream, ObjectOutputStream}
 
-import com.machinomy.xicity.{Connector, Identifier}
+import com.machinomy.xicity.Identifier
 
 import scala.util.{Random, Try}
 

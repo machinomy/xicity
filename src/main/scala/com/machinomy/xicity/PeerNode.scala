@@ -2,8 +2,9 @@ package com.machinomy.xicity
 
 import akka.actor.{Actor, ActorLogging, ActorRef, FSM, Props}
 import com.github.nscala_time.time.Imports._
-import scala.collection.mutable
+import com.machinomy.xicity.connectivity.Connector
 
+import scala.collection.mutable
 import scala.util.Random
 
 class PeerNode(identifier: Identifier, logic: ActorRef) extends Actor with ActorLogging {

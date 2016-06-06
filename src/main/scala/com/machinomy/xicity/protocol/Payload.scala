@@ -3,7 +3,8 @@ package com.machinomy.xicity.protocol
 import java.net.{InetAddress, InetSocketAddress}
 
 import com.machinomy.xicity.protocol.JavaPayload.JavaCodec
-import com.machinomy.xicity.{Connector, Identifier}
+import com.machinomy.xicity.Identifier
+import com.machinomy.xicity.connectivity.Connector
 import scodec._
 import scodec.bits._
 import scodec.codecs._
