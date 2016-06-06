@@ -19,13 +19,6 @@ class PeerClientHerd(identifier: Identifier, handlerFactory: () => ActorRef, thr
         node ! PeerNode.AddRunningClient(connector, client)
         runningClients = runningClients + (connector -> client)
       }
-    case cmd: PeerClientHerd.SendSingleMessageCommand =>
-      for {
-        connector <- cmd.connectors
-        client <- runningClients.get(connector)
-      } {
-        client ! PeerClient.SendSingleMessageCommand(cmd. from, cmd.to, cmd.text, cmd.expiration)
-      }
   }
 
   def selectSeeds(n: Int = 1) = Random.shuffle(seeds.toIndexedSeq).take(n)
@@ -34,7 +27,6 @@ class PeerClientHerd(identifier: Identifier, handlerFactory: () => ActorRef, thr
 object PeerClientHerd {
   sealed trait Protocol
   case object StartCommand extends Protocol
-  case class SendSingleMessageCommand(connectors: Set[Connector], from: Identifier, to: Identifier, text: Array[Byte], expiration: Long) extends Protocol
 
   def props(identifier: Identifier, handlerFactory: () => ActorRef, threshold: Int, initialSeeds: Set[Connector]): Props =
     Props(classOf[PeerClientHerd], identifier, handlerFactory, threshold, initialSeeds)
