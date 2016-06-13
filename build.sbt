@@ -1,13 +1,14 @@
 name := "xicity"
 
-version := "0.1"
+version := "0.0.1"
 
 scalaVersion := "2.11.8"
 
 organization := "com.machinomy"
 
 resolvers ++= Seq(
-  "tomp2p.net" at "http://tomp2p.net/dev/mvn/"
+  "tomp2p.net" at "http://tomp2p.net/dev/mvn/",
+  "Machinomy" at "http://machinomy.com:8081/artifactory/libs-release-local/"
 )
 
 libraryDependencies ++= Seq(
@@ -28,3 +29,6 @@ libraryDependencies ++= Seq(
   "com.lihaoyi" % "upickle_2.11" % "0.4.0",
   "com.jsuereth" %% "scala-arm" % "1.4"
 )
+
+publishTo := Some("Machinomy" at "http://machinomy.com:8081/artifactory/libs-release-local/;build.timestamp=" + new java.util.Date().getTime)
+credentials += Credentials(new File("credentials.properties"))
