@@ -10,11 +10,11 @@ import scala.concurrent.{ExecutionContext, Future}
 case class IncomingConnectionFactory(listener: ActorRef, running: Boolean = false)
 
 object IncomingConnectionFactory {
-  class Listener(local: Endpoint, handlerFactory: Vertex => ActorRef) extends Actor with ActorLogging {
+  class ListenerA(local: Endpoint, handlerFactory: Vertex => ActorRef) extends Actor with ActorLogging {
     import context.system
 
     override def receive: Receive = {
-      case Listener.Start =>
+      case ListenerA.Start =>
         IO(Tcp) ! Tcp.Bind(self, local.address)
         log.info(s"Binding to $local...")
         val master = sender()
@@ -22,7 +22,7 @@ object IncomingConnectionFactory {
           case Tcp.Bound(localBound) =>
             log.info(s"Bound to $localBound")
             val wire = sender()
-            master ! Listener.DidStart
+            master ! ListenerA.DidStart
             context become {
               case Tcp.Connected(remoteAddress, localAddress) =>
                 val remote = Endpoint(remoteAddress)
@@ -31,17 +31,17 @@ object IncomingConnectionFactory {
                 val handler = handlerFactory(vertex)
                 sender ! Tcp.Register(handler)
                 handler ! Tcp.Connected(remoteAddress, localAddress)
-              case Listener.Stop =>
+              case ListenerA.Stop =>
                 wire ! Tcp.Close
-                sender() ! Listener.DidStop
+                sender() ! ListenerA.DidStop
                 stop()
             }
           case Tcp.CommandFailed(cmd: Tcp.Bind) =>
             log.error(s"Can not bind to ${cmd.localAddress}")
             stop()
         }
-      case Listener.Stop =>
-        sender ! Listener.DidStop
+      case ListenerA.Stop =>
+        sender ! ListenerA.DidStop
         stop()
     }
 
@@ -51,32 +51,32 @@ object IncomingConnectionFactory {
     }
   }
 
-  object Listener {
+  object ListenerA {
     sealed trait Protocol
     object Start extends Protocol
     object DidStart extends Protocol
     object Stop extends Protocol
     object DidStop extends Protocol
-    def props(local: Endpoint, handlerFactory: Vertex => ActorRef) = Props(classOf[Listener], local, handlerFactory)
+    def props(local: Endpoint, handlerFactory: Vertex => ActorRef) = Props(classOf[ListenerA], local, handlerFactory)
   }
 
   def build(local: Endpoint, behavior: Behavior)(implicit af: ActorRefFactory, t: Timeout, ec: ExecutionContext): Future[IncomingConnectionFactory] = {
     val handlerFactory = (vertex: Vertex) => af.actorOf(Connection.props(vertex, behavior))
-    val listener = af.actorOf(Listener.props(local, handlerFactory))
+    val listener = af.actorOf(ListenerA.props(local, handlerFactory))
     val factory = new IncomingConnectionFactory(listener)
     Future.successful(factory)
   }
 
   def start(incomingConnectionFactory: IncomingConnectionFactory)(implicit t: Timeout, ec: ExecutionContext): Future[IncomingConnectionFactory] = {
-    (incomingConnectionFactory.listener ? Listener.Start).mapTo[Listener.DidStart.type].map {
-      case Listener.DidStart => incomingConnectionFactory.copy(running = true)
+    (incomingConnectionFactory.listener ? ListenerA.Start).mapTo[ListenerA.DidStart.type].map {
+      case ListenerA.DidStart => incomingConnectionFactory.copy(running = true)
       case _ => incomingConnectionFactory
     }
   }
 
   def stop(incomingConnectionFactory: IncomingConnectionFactory)(implicit t: Timeout, ec: ExecutionContext): Future[IncomingConnectionFactory] = {
-    (incomingConnectionFactory.listener ? Listener.Stop).mapTo[Listener.DidStop.type].map {
-      case Listener.DidStop => incomingConnectionFactory.copy(running = false)
+    (incomingConnectionFactory.listener ? ListenerA.Stop).mapTo[ListenerA.DidStop.type].map {
+      case ListenerA.DidStop => incomingConnectionFactory.copy(running = false)
       case _ => incomingConnectionFactory
     }
   }
