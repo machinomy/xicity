@@ -19,8 +19,8 @@ class Listener(local: Address, handlers: Listener.Handlers) extends Actor with A
       for {
         wire <- wireOpt
         remote = Address(remoteAddress)
-        vertex = Endpoint(remote, wire)
-        handler <- handlers(vertex)
+        endpoint = Endpoint(remote, wire)
+        handler <- handlers(endpoint)
       } yield {
         log info s"Got incoming connection from $remote"
         wire ! Tcp.Register(handler)
