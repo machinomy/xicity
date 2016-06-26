@@ -3,9 +3,9 @@ package com.machinomy.xicity.connectivity
 import akka.actor.{Actor, ActorLogging, Props}
 import akka.io.Tcp
 
-class Connection(vertex: Vertex, initial: Behavior) extends Actor with ActorLogging {
+class Connection(vertex: Vertex, initialBehavior: Behavior) extends Actor with ActorLogging {
 
-  override def receive: Receive = evolve(initial)
+  override def receive: Receive = evolve(initialBehavior)
 
   def evolve(behavior: Behavior): Receive = {
     case Tcp.Connected(remoteAddress, localAddress) =>
