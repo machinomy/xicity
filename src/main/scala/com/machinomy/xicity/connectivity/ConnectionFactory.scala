@@ -2,4 +2,4 @@ package com.machinomy.xicity.connectivity
 
 import akka.actor.ActorRef
 
-case class Vertex(endpoint: Address, wire: ActorRef)
+trait ConnectionFactory[A] extends Function[A, Option[ActorRef]]

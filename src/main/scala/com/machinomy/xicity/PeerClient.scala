@@ -2,9 +2,9 @@ package com.machinomy.xicity
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.io.{IO, Tcp}
-import com.machinomy.xicity.connectivity.Endpoint
+import com.machinomy.xicity.connectivity.Address
 
-class PeerClient(remote: Endpoint, handler: ActorRef) extends Actor with ActorLogging {
+class PeerClient(remote: Address, handler: ActorRef) extends Actor with ActorLogging {
   import context.system
 
   def receive = {
@@ -18,7 +18,7 @@ class PeerClient(remote: Endpoint, handler: ActorRef) extends Actor with ActorLo
       val connection = sender
       connection ! Tcp.Register(handler)
       log.info(s"OutgoingConnection to $remoteAddress")
-      handler ! PeerConnection.OutgoingConnection(connection, Endpoint(remoteAddress), Endpoint(localAddress))
+      handler ! PeerConnection.OutgoingConnection(connection, Address(remoteAddress), Address(localAddress))
     case cmd: PeerClient.SendSingleMessageCommand =>
       handler ! PeerConnection.SingleMessage(cmd.from, cmd.to, cmd.text, cmd.expiration)
     case e =>
@@ -31,5 +31,5 @@ object PeerClient {
   case object StartCommand extends Protocol
   case class SendSingleMessageCommand(from: Identifier, to: Identifier, text: Array[Byte], expiration: Long) extends Protocol
 
-  def props(remote: Endpoint, handler: ActorRef): Props = Props(classOf[PeerClient], remote, handler)
+  def props(remote: Address, handler: ActorRef): Props = Props(classOf[PeerClient], remote, handler)
 }

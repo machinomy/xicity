@@ -4,10 +4,10 @@ import akka.actor.FSM.Failure
 import akka.actor._
 import akka.io.{IO, Tcp}
 import com.machinomy.xicity.PeerServer.UpstreamData
-import com.machinomy.xicity.connectivity.Endpoint
+import com.machinomy.xicity.connectivity.Address
 
-case class PeerServer(id: Identifier, local: Endpoint, handlerFactory: () => ActorRef) extends FSM[PeerServer.State, PeerServer.Data] with ActorLogging {
-  var runningClients: Map[Endpoint, ActorRef] = Map.empty
+case class PeerServer(id: Identifier, local: Address, handlerFactory: () => ActorRef) extends FSM[PeerServer.State, PeerServer.Data] with ActorLogging {
+  var runningClients: Map[Address, ActorRef] = Map.empty
   import context.system
 
   startWith(PeerServer.InitialState, PeerServer.NoData)
@@ -22,11 +22,11 @@ case class PeerServer(id: Identifier, local: Endpoint, handlerFactory: () => Act
   when(PeerServer.UpstreamBound) {
     case Event(Tcp.Bound(localAddress), data: UpstreamData) =>
       log.info(s"Bound to $localAddress")
-      data.upstream ! PeerServer.DidConnect(Endpoint(localAddress))
+      data.upstream ! PeerServer.DidConnect(Address(localAddress))
       goto(PeerServer.FullyBound) using PeerServer.FullyBoundData(data.upstream, sender)
     case Event(Tcp.CommandFailed(cmd: Tcp.Bind), upstreamData: UpstreamData) =>
       println(upstreamData.upstream)
-      upstreamData.upstream ! PeerServer.CanNotBind(Endpoint(cmd.localAddress))
+      upstreamData.upstream ! PeerServer.CanNotBind(Address(cmd.localAddress))
       stop(Failure(s"Can not bind to ${cmd.localAddress}"))
   }
 
@@ -36,9 +36,9 @@ case class PeerServer(id: Identifier, local: Endpoint, handlerFactory: () => Act
       val handler = handlerFactory()
       connection ! Tcp.Register(handler)
       log.info(s"Incoming connection from $remoteAddress")
-      runningClients = runningClients.updated(Endpoint(remoteAddress), handler)
-      data.upstream ! PeerNode.AddRunningClient(Endpoint(remoteAddress), handler)
-      handler ! PeerConnection.IncomingConnection(connection, Endpoint(remoteAddress), Endpoint(localAddress))
+      runningClients = runningClients.updated(Address(remoteAddress), handler)
+      data.upstream ! PeerNode.AddRunningClient(Address(remoteAddress), handler)
+      handler ! PeerConnection.IncomingConnection(connection, Address(remoteAddress), Address(localAddress))
       stay()
     case Event(cmd: PeerServer.SendSingleMessageCommand, data: PeerServer.FullyBoundData) =>
       val handlers = for {
@@ -65,9 +65,9 @@ case class PeerServer(id: Identifier, local: Endpoint, handlerFactory: () => Act
 object PeerServer {
   sealed trait Protocol
   case object StartCommand extends Protocol
-  case class CanNotBind(connector: Endpoint) extends Protocol
-  case class DidConnect(connector: Endpoint) extends Protocol
-  case class SendSingleMessageCommand(closestConnectors: Set[Endpoint], from: Identifier, to: Identifier, text: Array[Byte], expiration: Long) extends Protocol
+  case class CanNotBind(connector: Address) extends Protocol
+  case class DidConnect(connector: Address) extends Protocol
+  case class SendSingleMessageCommand(closestConnectors: Set[Address], from: Identifier, to: Identifier, text: Array[Byte], expiration: Long) extends Protocol
 
   sealed trait State
   case object InitialState extends State
@@ -79,6 +79,6 @@ object PeerServer {
   case class UpstreamData(upstream: ActorRef) extends Data
   case class FullyBoundData(upstream: ActorRef, downstream: ActorRef) extends Data
 
-  def props(identifier: Identifier, local: Endpoint, handlerFactory: () => ActorRef) =
+  def props(identifier: Identifier, local: Address, handlerFactory: () => ActorRef) =
     Props(classOf[PeerServer], identifier, local, handlerFactory)
 }

@@ -1,14 +1,12 @@
 package com.machinomy.xicity.protocol
 
-import java.net.{InetAddress, InetSocketAddress}
+import java.net.InetAddress
 
-import com.machinomy.xicity.protocol.JavaPayload.JavaCodec
 import com.machinomy.xicity.Identifier
-import com.machinomy.xicity.connectivity.Endpoint
+import com.machinomy.xicity.connectivity.Address
 import scodec._
 import scodec.bits._
 import scodec.codecs._
-import shapeless.Sized
 
 import scala.util.Random
 
@@ -17,9 +15,9 @@ sealed trait Payload
 object Payload {
   type Discriminator[A <: Payload] = scodec.codecs.Discriminator[Payload, A, Byte]
 
-  case class VersionPayload(remoteConnector: Endpoint, nonce: Int, userAgent: String) extends Payload
+  case class VersionPayload(remoteConnector: Address, nonce: Int, userAgent: String) extends Payload
   object VersionPayload{
-    def apply(remoteConnector: Endpoint): VersionPayload = new VersionPayload(remoteConnector, new Random().nextInt(), "xicity/0.1")
+    def apply(remoteConnector: Address): VersionPayload = new VersionPayload(remoteConnector, new Random().nextInt(), "xicity/0.1")
   }
   case class PexPayload(ids: Set[Identifier]) extends Payload
   case class SingleMessagePayload(from: Identifier, to: Identifier, text: Array[Byte], expiration: Long) extends Payload
@@ -104,19 +102,19 @@ object Payload {
     override def sizeBound: SizeBound = SizeBound.exact(16)
   }
 
-  val connectorCodec: Codec[Endpoint] = new Codec[Endpoint] {
+  val connectorCodec: Codec[Address] = new Codec[Address] {
     val portCodec = uint16L
-    override def encode(value: Endpoint): Attempt[BitVector] =
+    override def encode(value: Address): Attempt[BitVector] =
       for {
         address <- inetAddressCodec.encode(value.address.getAddress)
         port <- portCodec.encode(value.address.getPort)
       } yield address ++ port
     override def sizeBound: SizeBound = inetAddressCodec.sizeBound + portCodec.sizeBound
-    override def decode(bits: BitVector): Attempt[DecodeResult[Endpoint]] =
+    override def decode(bits: BitVector): Attempt[DecodeResult[Address]] =
       for {
         inetAddressR <- inetAddressCodec.decode(bits)
         portR <- portCodec.decode(inetAddressR.remainder)
-      } yield DecodeResult(Endpoint(inetAddressR.value, portR.value), portR.remainder)
+      } yield DecodeResult(Address(inetAddressR.value, portR.value), portR.remainder)
   }
 
   val identifierCodec: Codec[Identifier] = new Codec[Identifier] {

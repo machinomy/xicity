@@ -1,18 +1,15 @@
 package com.machinomy.xicity
 
-import akka.actor.FSM.{Failure, Normal}
-import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable, FSM, Props}
-import akka.io.{IO, Tcp}
-
-import scala.concurrent.duration._
-import akka.util.ByteString
-import com.machinomy.xicity.protocol._
+import akka.actor.FSM.Failure
+import akka.actor.{ActorLogging, ActorRef, FSM, Props}
+import akka.io.Tcp
 import akka.pattern.ask
-import com.machinomy.xicity.connectivity.Endpoint
-import com.machinomy.xicity.protocol.Payload.Discriminator
+import akka.util.ByteString
+import com.machinomy.xicity.connectivity.Address
+import com.machinomy.xicity.protocol._
 import scodec.{Attempt, DecodeResult}
 
-import scala.util.Random
+import scala.concurrent.duration._
 
 class PeerConnection(node: ActorRef) extends FSM[PeerConnection.State, PeerConnection.Data] with ActorLogging {
 
@@ -104,7 +101,7 @@ class PeerConnection(node: ActorRef) extends FSM[PeerConnection.State, PeerConne
 
   initialize()
 
-  def stopOnPeerClose(connector: Endpoint): State = {
+  def stopOnPeerClose(connector: Address): State = {
     log.info(s"Stopping peer connection: received Tcp.PeerClosed")
     node ! PeerNode.RemoveRoutingTableCommand(connector)
     node ! PeerNode.RemoveRunningClient(connector)
@@ -148,8 +145,8 @@ class PeerConnection(node: ActorRef) extends FSM[PeerConnection.State, PeerConne
 
 object PeerConnection {
   sealed trait Protocol
-  case class OutgoingConnection(tcp: ActorRef, remote: Endpoint, local: Endpoint) extends Protocol
-  case class IncomingConnection(tcp: ActorRef, remote: Endpoint, local: Endpoint) extends Protocol
+  case class OutgoingConnection(tcp: ActorRef, remote: Address, local: Address) extends Protocol
+  case class IncomingConnection(tcp: ActorRef, remote: Address, local: Address) extends Protocol
   case class SingleMessage(from: Identifier, to: Identifier, text: Array[Byte], expiration: Long) extends Protocol
 
   sealed trait State
@@ -160,7 +157,7 @@ object PeerConnection {
 
   sealed trait Data
   case object NoData extends Data
-  case class ConnectionData(wire: ActorRef, remoteConnector: Endpoint, localConnector: Endpoint) extends Data
+  case class ConnectionData(wire: ActorRef, remoteConnector: Address, localConnector: Address) extends Data
   case class WaitingForVersionPayloadData(nonce: Long, connectionData: ConnectionData) extends Data
   case class WaitingForPexPayloadData(connectionData: ConnectionData) extends Data
 

@@ -1,13 +1,13 @@
 package com.machinomy.xicity
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
-import com.machinomy.xicity.connectivity.Endpoint
+import com.machinomy.xicity.connectivity.Address
 
 import scala.util.Random
 
-class PeerClientHerd(identifier: Identifier, handlerFactory: () => ActorRef, threshold: Int, initialSeeds: Set[Endpoint]) extends Actor with ActorLogging {
-  var runningClients: Map[Endpoint, ActorRef] = Map.empty
-  var seeds: Set[Endpoint] = initialSeeds
+class PeerClientHerd(identifier: Identifier, handlerFactory: () => ActorRef, threshold: Int, initialSeeds: Set[Address]) extends Actor with ActorLogging {
+  var runningClients: Map[Address, ActorRef] = Map.empty
+  var seeds: Set[Address] = initialSeeds
 
   override def receive: Receive = {
     case PeerClientHerd.StartCommand =>
@@ -29,6 +29,6 @@ object PeerClientHerd {
   sealed trait Protocol
   case object StartCommand extends Protocol
 
-  def props(identifier: Identifier, handlerFactory: () => ActorRef, threshold: Int, initialSeeds: Set[Endpoint]): Props =
+  def props(identifier: Identifier, handlerFactory: () => ActorRef, threshold: Int, initialSeeds: Set[Address]): Props =
     Props(classOf[PeerClientHerd], identifier, handlerFactory, threshold, initialSeeds)
 }

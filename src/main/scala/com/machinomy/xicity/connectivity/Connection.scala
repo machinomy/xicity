@@ -1,24 +1,27 @@
 package com.machinomy.xicity.connectivity
 
-import akka.actor.{Actor, ActorLogging, Props}
+import akka.actor.{Actor, Props}
 import akka.io.Tcp
 
-class Connection(vertex: Vertex, initialBehavior: Behavior) extends Actor with ActorLogging {
+class Connection(vertex: Vertex, initialState: State) extends Actor {
+  override def receive: Receive = next(initialState)
 
-  override def receive: Receive = evolve(initialBehavior)
+  def next(state: State): Receive = evolve(state).andThen(b => context.become(next(b)))
 
-  def evolve(behavior: Behavior): Receive = {
+  def evolve(state: State): PartialFunction[Any, State] = {
     case Tcp.Connected(remoteAddress, localAddress) =>
-      next(behavior.onConnect(vertex))
+      state.onConnect(vertex)
     case Tcp.Received(byteString) =>
-      next(behavior.onRead(byteString.toArray))
+      state.onRead(byteString.toArray)
     case Tcp.Closed =>
-      next(behavior.onDisconnect())
+      state.onClose()
+    case Tcp.ErrorClosed(_) =>
+      state.onDisconnect()
+    case Tcp.PeerClosed =>
+      state.onDisconnect()
   }
-
-  def next(behavior: Behavior) = context.become(evolve(behavior))
 }
 
 object Connection {
-  def props(vertex: Vertex, behavior: Behavior) = Props(classOf[Connection], vertex, behavior)
+  def props(vertex: Vertex, behavior: State) = Props(classOf[Connection], vertex, behavior)
 }
