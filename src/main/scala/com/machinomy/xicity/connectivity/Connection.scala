@@ -3,7 +3,7 @@ package com.machinomy.xicity.connectivity
 import akka.actor.{Actor, Props}
 import akka.io.Tcp
 
-class Connection(vertex: Vertex, initialState: State) extends Actor {
+class Connection(vertex: Endpoint, initialState: State) extends Actor {
   override def receive: Receive = next(initialState)
 
   def next(state: State): Receive = evolve(state).andThen(b => context.become(next(b)))
@@ -23,5 +23,5 @@ class Connection(vertex: Vertex, initialState: State) extends Actor {
 }
 
 object Connection {
-  def props(vertex: Vertex, behavior: State) = Props(classOf[Connection], vertex, behavior)
+  def props(vertex: Endpoint, behavior: State) = Props(classOf[Connection], vertex, behavior)
 }

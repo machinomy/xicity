@@ -19,7 +19,7 @@ class Listener(local: Address, handlers: Listener.Handlers) extends Actor with A
       for {
         wire <- wireOpt
         remote = Address(remoteAddress)
-        vertex = Vertex(remote, wire)
+        vertex = Endpoint(remote, wire)
         handler <- handlers(vertex)
       } yield {
         log info s"Got incoming connection from $remote"
@@ -43,6 +43,6 @@ class Listener(local: Address, handlers: Listener.Handlers) extends Actor with A
 }
 
 object Listener {
-  type Handlers = ConnectionFactory[Vertex]
+  type Handlers = ConnectionFactory[Endpoint]
   def props(local: Address, handlers: Handlers) = Props(classOf[Listener], local, handlers)
 }
