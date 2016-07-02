@@ -11,12 +11,15 @@ class Server(local: Address, initialBehavior: Server.Behavior) extends Actor wit
   override def preStart(): Unit = {
     implicit val actorSystem = context.system
     IO(Tcp) ! Tcp.Bind(self, local.address)
+    log.info(s"Binding to ${local.address}")
   }
 
   override def receive: Receive = {
     case Tcp.Bound(localAddress) =>
+      log.info(s"Bound to $localAddress")
       behavior = behavior.didBound(sender())
     case Tcp.Connected(remoteAddress, localAddress) =>
+      log.info(s"Connected to $localAddress")
       behavior = behavior.didConnect(remoteAddress)
     case Tcp.CommandFailed(cmd: Tcp.Bind) =>
       log.error(s"Can not bind to ${cmd.localAddress}")
