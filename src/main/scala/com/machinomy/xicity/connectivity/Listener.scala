@@ -4,7 +4,7 @@ import akka.actor._
 import akka.io.{IO, Tcp}
 
 class Listener(local: Address, handlers: Listener.Handlers, initialBehavior: ListenerBehavior) extends Actor with ActorLogging {
-  var wireOpt: Option[ActorRef] = None
+  var behavior = initialBehavior
 
   override def preStart(): Unit = {
     implicit val actorSytem = context.system
@@ -13,32 +13,21 @@ class Listener(local: Address, handlers: Listener.Handlers, initialBehavior: Lis
 
   override def receive: Receive = {
     case Tcp.Bound(localAddress) =>
-      wireOpt = Some(sender())
-      log info s"Bound to $localAddress"
+      behavior = behavior.didBind(sender())
     case Tcp.Connected(remoteAddress, localAddress) =>
-      for {
-        wire <- wireOpt
-        remote = Address(remoteAddress)
-        endpoint = Endpoint(remote, wire)
-        handler <- handlers(endpoint)
-      } yield {
-        log info s"Got incoming connection from $remote"
-        wire ! Tcp.Register(handler)
-        handler ! Tcp.Connected(remoteAddress, localAddress)
-      }
+      behavior = behavior.didConnect(remoteAddress)
     case Tcp.CommandFailed(cmd: Tcp.Bind) =>
-      log error s"Can not bind to ${cmd.localAddress}"
-      context stop self
+      log.error(s"Can not bind to ${cmd.localAddress}")
+      context.stop(self)
     case Tcp.ErrorClosed(cause) =>
-      log error s"Closed connection on error: $cause"
-      context stop self
+      log.error(s"Closed connection on error: $cause")
+      behavior = behavior.didDisconnect()
+      context.stop(self)
   }
 
   override def postStop(): Unit = {
-    log info "Shutting down the listener..."
-    for {
-      wire <- wireOpt
-    } yield wire ! Tcp.Close
+    log.info("Shutting down the listener...")
+    behavior.didClose()
   }
 }
 

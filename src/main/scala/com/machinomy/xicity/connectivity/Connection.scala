@@ -8,17 +8,17 @@ class Connection(endpoint: Endpoint, initialBehavior: ConnectionBehavior) extend
 
   def evolve(behavior: ConnectionBehavior): Receive = {
     case Tcp.Connected(remoteAddress, localAddress) =>
-      next(behavior.onConnect(endpoint))
+      next(behavior.didConnect(endpoint))
     case Tcp.Received(byteString) =>
-      next(behavior.onRead(byteString.toArray))
+      next(behavior.didRead(byteString.toArray))
     case Tcp.Closed =>
-      behavior.onClose()
+      behavior.didClose()
       context.stop(self)
     case Tcp.ErrorClosed(_) =>
-      behavior.onDisconnect()
+      behavior.didDisconnect()
       context.stop(self)
     case Tcp.PeerClosed =>
-      behavior.onDisconnect()
+      behavior.didDisconnect()
       context.stop(self)
   }
 

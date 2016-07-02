@@ -1,8 +1,8 @@
 package com.machinomy.xicity.connectivity
 
 trait ConnectionBehavior {
-  def onConnect(endpoint: Endpoint): ConnectionBehavior
-  def onDisconnect(): ConnectionBehavior
-  def onRead(bytes: Array[Byte]): ConnectionBehavior
-  def onClose(): ConnectionBehavior
+  def didConnect(endpoint: Endpoint): ConnectionBehavior
+  def didDisconnect(): ConnectionBehavior
+  def didRead(bytes: Array[Byte]): ConnectionBehavior
+  def didClose(): ConnectionBehavior
 }
