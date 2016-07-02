@@ -26,7 +26,7 @@ class ClientMonitor(seeds: Set[Address], threshold: Byte, initialBehavior: Clien
     case address :: as =>
       val actor = context.actorOf(Client.props(address, behavior.clientBehavior))
       addClients(as, behavior.addClient(actor))
-    case Seq.empty => behavior
+    case Seq() => behavior
   }
 }
 
