@@ -3,10 +3,10 @@ package com.machinomy.xicity.connectivity
 import akka.actor.{Actor, Props}
 import akka.io.Tcp
 
-class Connection(endpoint: Endpoint, initialBehavior: ConnectionBehavior) extends Actor {
+class Connection(endpoint: Endpoint, initialBehavior: Connection.Behavior) extends Actor {
   override def receive: Receive = evolve(initialBehavior)
 
-  def evolve(behavior: ConnectionBehavior): Receive = {
+  def evolve(behavior: Connection.Behavior): Receive = {
     case Tcp.Connected(remoteAddress, localAddress) =>
       next(behavior.didConnect(endpoint))
     case Tcp.Received(byteString) =>
@@ -22,9 +22,16 @@ class Connection(endpoint: Endpoint, initialBehavior: ConnectionBehavior) extend
       context.stop(self)
   }
 
-  def next(b: ConnectionBehavior) = context.become(evolve(b))
+  def next(b: Connection.Behavior) = context.become(evolve(b))
 }
 
 object Connection {
-  def props(endpoint: Endpoint, behavior: ConnectionBehavior) = Props(classOf[Connection], endpoint, behavior)
+  def props(endpoint: Endpoint, behavior: Behavior) = Props(classOf[Connection], endpoint, behavior)
+
+  trait Behavior {
+    def didConnect(endpoint: Endpoint): Behavior
+    def didDisconnect(): Behavior
+    def didRead(bytes: Array[Byte]): Behavior
+    def didClose(): Behavior
+  }
 }
