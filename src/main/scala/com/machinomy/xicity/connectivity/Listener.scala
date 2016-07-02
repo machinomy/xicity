@@ -1,9 +1,11 @@
 package com.machinomy.xicity.connectivity
 
+import java.net.InetSocketAddress
+
 import akka.actor._
 import akka.io.{IO, Tcp}
 
-class Listener(local: Address, initialBehavior: ListenerBehavior) extends Actor with ActorLogging {
+class Listener(local: Address, initialBehavior: Listener.Behavior) extends Actor with ActorLogging {
   var behavior = initialBehavior
 
   override def preStart(): Unit = {
@@ -13,7 +15,7 @@ class Listener(local: Address, initialBehavior: ListenerBehavior) extends Actor 
 
   override def receive: Receive = {
     case Tcp.Bound(localAddress) =>
-      behavior = behavior.didBind(sender())
+      behavior = behavior.didBound(sender())
     case Tcp.Connected(remoteAddress, localAddress) =>
       behavior = behavior.didConnect(remoteAddress)
     case Tcp.CommandFailed(cmd: Tcp.Bind) =>
@@ -32,5 +34,12 @@ class Listener(local: Address, initialBehavior: ListenerBehavior) extends Actor 
 }
 
 object Listener {
-  def props(local: Address, behavior: ListenerBehavior) = Props(classOf[Listener], local, behavior)
+  def props(local: Address, behavior: Behavior) = Props(classOf[Listener], local, behavior)
+
+  trait Behavior {
+    def didBound(wire: ActorRef): Behavior
+    def didConnect(remoteAddress: InetSocketAddress): Behavior
+    def didClose(): Behavior
+    def didDisconnect(): Behavior
+  }
 }
