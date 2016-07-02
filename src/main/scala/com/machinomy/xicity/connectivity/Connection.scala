@@ -4,22 +4,25 @@ import akka.actor.{Actor, Props}
 import akka.io.Tcp
 
 class Connection(endpoint: Endpoint, behavior: ConnectionBehavior) extends Actor {
-  override def receive: Receive = next(behavior)
+  override def receive: Receive = evolve(behavior)
 
-  def next(behavior: ConnectionBehavior): Receive = evolve(behavior).andThen(b => context.become(next(b)))
-
-  def evolve(behavior: ConnectionBehavior): PartialFunction[Any, ConnectionBehavior] = {
+  def evolve(behavior: ConnectionBehavior): Receive = {
     case Tcp.Connected(remoteAddress, localAddress) =>
-      behavior.onConnect(endpoint)
+      next(behavior.onConnect(endpoint))
     case Tcp.Received(byteString) =>
-      behavior.onRead(byteString.toArray)
+      next(behavior.onRead(byteString.toArray))
     case Tcp.Closed =>
       behavior.onClose()
+      context.stop(self)
     case Tcp.ErrorClosed(_) =>
       behavior.onDisconnect()
+      context.stop(self)
     case Tcp.PeerClosed =>
       behavior.onDisconnect()
+      context.stop(self)
   }
+
+  def next(b: ConnectionBehavior) = context.become(evolve(b))
 }
 
 object Connection {
