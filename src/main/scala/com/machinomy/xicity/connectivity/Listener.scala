@@ -9,7 +9,7 @@ class Listener(local: Address, initialBehavior: Listener.Behavior) extends Actor
   var behavior = initialBehavior
 
   override def preStart(): Unit = {
-    implicit val actorSytem = context.system
+    implicit val actorSystem = context.system
     IO(Tcp) ! Tcp.Bind(self, local.address)
   }
 
