@@ -17,10 +17,10 @@ class Server(local: Address, initialBehavior: Server.Behavior) extends Actor wit
   override def receive: Receive = {
     case Tcp.Bound(localAddress) =>
       log.info(s"Bound to $localAddress")
-      behavior = behavior.didBound(sender())
+      behavior = behavior.didBound(localAddress)
     case Tcp.Connected(remoteAddress, localAddress) =>
       log.info(s"Connected to $localAddress")
-      behavior = behavior.didConnect(remoteAddress)
+      behavior = behavior.didConnect(remoteAddress, sender)
     case Tcp.CommandFailed(cmd: Tcp.Bind) =>
       log.error(s"Can not bind to ${cmd.localAddress}")
       context.stop(self)
@@ -40,8 +40,8 @@ object Server {
   def props(local: Address, behavior: Behavior) = Props(classOf[Server], local, behavior)
 
   trait Behavior {
-    def didBound(wire: ActorRef): Behavior
-    def didConnect(remoteAddress: InetSocketAddress): Behavior
+    def didBound(localAddress: InetSocketAddress): Behavior
+    def didConnect(remoteAddress: InetSocketAddress, wire: ActorRef)(implicit context: ActorContext): Behavior
     def didClose(): Behavior
     def didDisconnect(): Behavior
   }
