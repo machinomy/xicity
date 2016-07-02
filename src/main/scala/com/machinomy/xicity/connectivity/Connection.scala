@@ -3,8 +3,8 @@ package com.machinomy.xicity.connectivity
 import akka.actor.{Actor, Props}
 import akka.io.Tcp
 
-class Connection(endpoint: Endpoint, behavior: ConnectionBehavior) extends Actor {
-  override def receive: Receive = evolve(behavior)
+class Connection(endpoint: Endpoint, initialBehavior: ConnectionBehavior) extends Actor {
+  override def receive: Receive = evolve(initialBehavior)
 
   def evolve(behavior: ConnectionBehavior): Receive = {
     case Tcp.Connected(remoteAddress, localAddress) =>

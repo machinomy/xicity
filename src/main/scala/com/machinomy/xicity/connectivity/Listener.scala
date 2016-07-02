@@ -3,7 +3,7 @@ package com.machinomy.xicity.connectivity
 import akka.actor._
 import akka.io.{IO, Tcp}
 
-class Listener(local: Address, handlers: Listener.Handlers) extends Actor with ActorLogging {
+class Listener(local: Address, handlers: Listener.Handlers, initialBehavior: ListenerBehavior) extends Actor with ActorLogging {
   var wireOpt: Option[ActorRef] = None
 
   override def preStart(): Unit = {
