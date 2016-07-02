@@ -1,37 +1,58 @@
 package com.machinomy.xicity.connectivity
 
-import akka.actor.{Actor, Props}
+import akka.actor.{Actor, ActorLogging, Props}
 import akka.io.Tcp
 
-class Connection(endpoint: Endpoint, initialBehavior: Connection.Behavior) extends Actor {
-  override def receive: Receive = evolve(initialBehavior)
+class Connection(endpoint: Endpoint, initialBehavior: Connection.Behavior) extends Actor with ActorLogging {
+  var behavior = initialBehavior
 
-  def evolve(behavior: Connection.Behavior): Receive = {
+  override def receive: Receive = {
     case Tcp.Connected(remoteAddress, localAddress) =>
-      next(behavior.didConnect(endpoint))
+      behavior = behavior.didConnect(endpoint)
     case Tcp.Received(byteString) =>
-      next(behavior.didRead(byteString.toArray))
+      behavior = behavior.didRead(byteString.toArray)
     case Tcp.Closed =>
-      behavior.didClose()
+      behavior = behavior.didClose()
       context.stop(self)
     case Tcp.ErrorClosed(_) =>
-      behavior.didDisconnect()
+      behavior = behavior.didDisconnect()
       context.stop(self)
     case Tcp.PeerClosed =>
-      behavior.didDisconnect()
+      behavior = behavior.didDisconnect()
       context.stop(self)
   }
 
-  def next(b: Connection.Behavior) = context.become(evolve(b))
 }
 
 object Connection {
   def props(endpoint: Endpoint, behavior: Behavior) = Props(classOf[Connection], endpoint, behavior)
 
   trait Behavior {
+
+    /** Just instantiated a new connection.
+      *
+      * @param endpoint
+      * @return
+      */
     def didConnect(endpoint: Endpoint): Behavior
+
+    /** Connection close is initiated by the peer.
+      *
+      * @return
+      */
     def didDisconnect(): Behavior
+
+    /** Received something from the peer.
+      *
+      * @param bytes
+      * @return
+      */
     def didRead(bytes: Array[Byte]): Behavior
+
+    /** Connection close is initiated by the code.
+      *
+      * @return
+      */
     def didClose(): Behavior
   }
 }
