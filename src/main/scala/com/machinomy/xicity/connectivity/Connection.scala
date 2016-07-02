@@ -26,5 +26,5 @@ class Connection(endpoint: Endpoint, initialBehavior: ConnectionBehavior) extend
 }
 
 object Connection {
-  def props(endpoint: Endpoint, state: ConnectionBehavior) = Props(classOf[Connection], endpoint, state)
+  def props(endpoint: Endpoint, behavior: ConnectionBehavior) = Props(classOf[Connection], endpoint, behavior)
 }

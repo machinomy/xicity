@@ -3,7 +3,7 @@ package com.machinomy.xicity.connectivity
 import akka.actor._
 import akka.io.{IO, Tcp}
 
-class Listener(local: Address, handlers: Listener.Handlers, initialBehavior: ListenerBehavior) extends Actor with ActorLogging {
+class Listener(local: Address, initialBehavior: ListenerBehavior) extends Actor with ActorLogging {
   var behavior = initialBehavior
 
   override def preStart(): Unit = {
@@ -32,6 +32,5 @@ class Listener(local: Address, handlers: Listener.Handlers, initialBehavior: Lis
 }
 
 object Listener {
-  type Handlers = ConnectionFactory[Endpoint]
-  def props(local: Address, handlers: Handlers) = Props(classOf[Listener], local, handlers)
+  def props(local: Address, behavior: ListenerBehavior) = Props(classOf[Listener], local, behavior)
 }
