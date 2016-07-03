@@ -34,25 +34,25 @@ object Connection {
       * @param endpoint
       * @return
       */
-    def didConnect(endpoint: Endpoint): Behavior = this
+    def didConnect(endpoint: Endpoint): Behavior
 
     /** Connection close is initiated by the peer.
       *
       * @return
       */
-    def didDisconnect(): Behavior = this
+    def didDisconnect(): Behavior
 
     /** Received something from the peer.
       *
       * @param bytes
       * @return
       */
-    def didRead(bytes: Array[Byte]): Behavior = this
+    def didRead(bytes: Array[Byte]): Behavior
 
     /** Connection close is initiated by the code.
       *
       * @return
       */
-    def didClose(): Behavior = this
+    def didClose(): Behavior
   }
 }

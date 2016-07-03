@@ -1,9 +1,8 @@
 package com.machinomy.xicity.connectivity
 
-import akka.actor.{Actor, ActorRef}
+import akka.actor.{Actor, ActorContext, Props}
 
 import scala.annotation.tailrec
-import scala.collection.immutable.IndexedSeq
 import scala.util.Random
 
 class ClientMonitor(seeds: Set[Address], threshold: Byte, initialBehavior: ClientMonitor.Behavior) extends Actor {
@@ -19,20 +18,21 @@ class ClientMonitor(seeds: Set[Address], threshold: Byte, initialBehavior: Clien
     case something => throw new IllegalArgumentException(s"Not planned to receive anything, got: $something")
   }
 
-  def selectSeeds(n: Byte): IndexedSeq[Address] = Random.shuffle(seeds.toIndexedSeq).take(n)
+  def selectSeeds(n: Byte): Set[Address] = Random.shuffle(seeds).take(n)
 
   @tailrec
-  final def addClients(addresses: Seq[Address], behavior: ClientMonitor.Behavior): ClientMonitor.Behavior = addresses match {
-    case address :: as =>
-      val actor = context.actorOf(Client.props(address, behavior.clientBehavior))
-      addClients(as, behavior.addClient(actor))
-    case Seq() => behavior
-  }
+  final def addClients(addresses: Set[Address], behavior: ClientMonitor.Behavior): ClientMonitor.Behavior =
+    if (addresses.isEmpty) {
+      behavior
+    } else {
+      addClients(addresses.tail, behavior.addClient(addresses.head))
+    }
 }
 
 object ClientMonitor {
   trait Behavior {
-    def addClient(actor: ActorRef): Behavior
-    def clientBehavior: Client.Behavior
+    def addClient(address: Address)(implicit context: ActorContext): Behavior
   }
+
+  def props(seeds: Set[Address], threshold: Byte, behavior: Behavior) = Props(classOf[ClientMonitor], seeds, threshold, behavior)
 }

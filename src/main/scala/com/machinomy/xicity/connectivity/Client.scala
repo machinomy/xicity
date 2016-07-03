@@ -2,7 +2,7 @@ package com.machinomy.xicity.connectivity
 
 import java.net.InetSocketAddress
 
-import akka.actor.{Actor, ActorLogging, Props}
+import akka.actor.{Actor, ActorContext, ActorLogging, Props}
 import akka.io.{IO, Tcp}
 
 class Client(address: Address, initialBehavior: Client.Behavior) extends Actor with ActorLogging {
@@ -32,7 +32,9 @@ class Client(address: Address, initialBehavior: Client.Behavior) extends Actor w
 
 object Client {
   trait Behavior {
-    def didConnect(endpoint: Endpoint, remoteAddress: InetSocketAddress, localAddress: InetSocketAddress): Behavior
+    def didConnect(endpoint: Endpoint,
+                   remoteAddress: InetSocketAddress,
+                   localAddress: InetSocketAddress)(implicit context: ActorContext): Behavior
     def didDisconnect(): Behavior
     def didClose(): Behavior
   }
