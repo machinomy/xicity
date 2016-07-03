@@ -8,7 +8,7 @@ import com.typesafe.scalalogging.LazyLogging
 object DefaultBehavior {
 
   case class ServerBehavior(localAddressOpt: Option[InetSocketAddress] = None, tmpHandlers: Set[ActorRef] = Set.empty)
-    extends Server.Behavior with LazyLogging {
+    extends ServerActor.Behavior with LazyLogging {
 
     override def didBound(localAddress: InetSocketAddress) = {
       logger.info(s"Bound to $localAddress")
@@ -20,12 +20,12 @@ object DefaultBehavior {
       val endpoint = Endpoint(address, Wire(connection))
       val handler = newHandler(endpoint)
       connection ! Tcp.Register(handler)
-      logger.info(s"Server bound to $localAddressOpt got connection from $remoteAddress")
+      logger.info(s"ServerActor bound to $localAddressOpt got connection from $remoteAddress")
       copy(tmpHandlers = tmpHandlers + handler)
     }
 
     override def didDisconnect() = {
-      logger.info(s"Server got unbound from $localAddressOpt")
+      logger.info(s"ServerActor got unbound from $localAddressOpt")
       copy(localAddressOpt = None)
     }
 

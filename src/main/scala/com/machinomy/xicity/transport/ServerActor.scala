@@ -5,7 +5,7 @@ import java.net.InetSocketAddress
 import akka.actor._
 import akka.io.{IO, Tcp}
 
-class Server(local: Address, initialBehavior: Server.Behavior) extends Actor with ActorLogging {
+class ServerActor(local: Address, initialBehavior: ServerActor.Behavior) extends Actor with ActorLogging {
   var behavior = initialBehavior
 
   override def preStart(): Unit = {
@@ -36,8 +36,8 @@ class Server(local: Address, initialBehavior: Server.Behavior) extends Actor wit
   }
 }
 
-object Server {
-  def props(local: Address, behavior: Behavior) = Props(classOf[Server], local, behavior)
+object ServerActor {
+  def props(local: Address, behavior: Behavior) = Props(classOf[ServerActor], local, behavior)
 
   trait Behavior {
     def didBound(localAddress: InetSocketAddress): Behavior

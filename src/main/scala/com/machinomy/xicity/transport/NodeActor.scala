@@ -22,7 +22,7 @@ class NodeActor(listenerAddress: Address, seeds: Set[Address], threshold: Byte, 
 }
 
 object NodeActor {
-  trait Behavior extends ClientMonitorActor.Behavior with Server.Behavior {
+  trait Behavior extends ClientMonitorActor.Behavior with ServerActor.Behavior {
     def didStartNode(listenerAddress: Address,
                      seeds: Set[Address],
                      threshold: Byte)(implicit refFactory: ActorRefFactory): Behavior
