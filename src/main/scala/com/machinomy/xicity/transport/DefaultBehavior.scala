@@ -57,7 +57,7 @@ object DefaultBehavior {
       this
     }
 
-    override def didConnect(endpoint: Endpoint) = this
+    override def didConnect(endpoint: Endpoint) = this // Is not called when a client have connected to a server.
   }
 
 
@@ -84,7 +84,7 @@ object DefaultBehavior {
                             localAddress: InetSocketAddress)(implicit context: ActorContext) = {
       logger.info(s"Connected to $endpoint via $remoteAddress on $localAddress")
       endpoint.wire.tell(Tcp.Register(newHandler(endpoint)), context.self)
-      this
+      copy(endpointOpt = Some(endpoint))
     }
 
     override def didDisconnect() = {
