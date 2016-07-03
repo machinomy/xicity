@@ -1,7 +1,7 @@
 package com.machinomy.xicity.examples
 
 import akka.actor.ActorSystem
-import com.machinomy.xicity.transport.{Address, DefaultBehavior, ServerActor$}
+import com.machinomy.xicity.transport.{Address, DefaultBehavior, ServerActor}
 
 object ServerExample {
   def run(): Unit = {
