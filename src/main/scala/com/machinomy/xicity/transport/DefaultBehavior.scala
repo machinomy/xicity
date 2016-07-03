@@ -62,7 +62,7 @@ object DefaultBehavior {
 
 
   case class ClientMonitorBehavior(clients: Map[Address, ActorRef] = Map.empty)
-    extends ClientMonitor.Behavior
+    extends ClientMonitorActor.Behavior
        with LazyLogging {
 
     override def addClient(address: Address)(implicit context: ActorContext) = {

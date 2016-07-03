@@ -5,7 +5,7 @@ import akka.actor.{Actor, ActorContext, Props}
 import scala.annotation.tailrec
 import scala.util.Random
 
-class ClientMonitor(seeds: Set[Address], threshold: Byte, initialBehavior: ClientMonitor.Behavior) extends Actor {
+class ClientMonitorActor(seeds: Set[Address], threshold: Byte, initialBehavior: ClientMonitorActor.Behavior) extends Actor {
   assert(threshold >= 0)
 
   var behavior = initialBehavior
@@ -21,7 +21,7 @@ class ClientMonitor(seeds: Set[Address], threshold: Byte, initialBehavior: Clien
   def selectSeeds(n: Byte): Set[Address] = Random.shuffle(seeds).take(n)
 
   @tailrec
-  final def addClients(addresses: Set[Address], behavior: ClientMonitor.Behavior): ClientMonitor.Behavior =
+  final def addClients(addresses: Set[Address], behavior: ClientMonitorActor.Behavior): ClientMonitorActor.Behavior =
     if (addresses.isEmpty) {
       behavior
     } else {
@@ -29,10 +29,10 @@ class ClientMonitor(seeds: Set[Address], threshold: Byte, initialBehavior: Clien
     }
 }
 
-object ClientMonitor {
+object ClientMonitorActor {
   trait Behavior {
     def addClient(address: Address)(implicit context: ActorContext): Behavior
   }
 
-  def props(seeds: Set[Address], threshold: Byte, behavior: Behavior) = Props(classOf[ClientMonitor], seeds, threshold, behavior)
+  def props(seeds: Set[Address], threshold: Byte, behavior: Behavior) = Props(classOf[ClientMonitorActor], seeds, threshold, behavior)
 }
