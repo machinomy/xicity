@@ -8,7 +8,7 @@ class Node(listenerAddress: Address, seeds: Set[Address], threshold: Byte, initi
   var behavior = initialBehavior
 
   override def preStart() = {
-    behavior = behavior.startNode(listenerAddress, seeds, threshold)
+    behavior = behavior.didStartNode(listenerAddress, seeds, threshold)
   }
 
   override def receive = {
@@ -16,17 +16,17 @@ class Node(listenerAddress: Address, seeds: Set[Address], threshold: Byte, initi
   }
 
   override def postStop() = {
-    behavior = behavior.stopNode()
+    behavior = behavior.didStopNode()
   }
 
 }
 
 object Node {
   trait Behavior extends ClientMonitor.Behavior with Server.Behavior {
-    def startNode(listenerAddress: Address,
-                  seeds: Set[Address],
-                  threshold: Byte)(implicit refFactory: ActorRefFactory): Behavior
-    def stopNode()(implicit context: ActorContext): Behavior
+    def didStartNode(listenerAddress: Address,
+                     seeds: Set[Address],
+                     threshold: Byte)(implicit refFactory: ActorRefFactory): Behavior
+    def didStopNode()(implicit context: ActorContext): Behavior
   }
 
   def props(listenerAddress: Address, seeds: Set[Address], threshold: Byte, initialBehavior: Node.Behavior) =
