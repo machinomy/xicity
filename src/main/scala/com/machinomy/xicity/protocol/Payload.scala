@@ -3,7 +3,7 @@ package com.machinomy.xicity.protocol
 import java.net.InetAddress
 
 import com.machinomy.xicity.Identifier
-import com.machinomy.xicity.connectivity.Address
+import com.machinomy.xicity.transport.Address
 import scodec._
 import scodec.bits._
 import scodec.codecs._

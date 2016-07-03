@@ -4,7 +4,7 @@ import akka.actor.FSM.Failure
 import akka.actor._
 import akka.io.{IO, Tcp}
 import com.machinomy.xicity.PeerServer.UpstreamData
-import com.machinomy.xicity.connectivity.Address
+import com.machinomy.xicity.transport.Address
 
 case class PeerServer(id: Identifier, local: Address, handlerFactory: () => ActorRef) extends FSM[PeerServer.State, PeerServer.Data] with ActorLogging {
   var runningClients: Map[Address, ActorRef] = Map.empty

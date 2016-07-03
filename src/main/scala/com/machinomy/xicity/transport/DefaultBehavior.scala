@@ -1,4 +1,4 @@
-package com.machinomy.xicity.connectivity
+package com.machinomy.xicity.transport
 import java.net.InetSocketAddress
 
 import akka.actor.{ActorContext, ActorRef}

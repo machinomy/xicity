@@ -1,7 +1,7 @@
 package com.machinomy.xicity.examples
 
 import akka.actor.ActorSystem
-import com.machinomy.xicity.connectivity.{Address, ClientMonitor, DefaultBehavior}
+import com.machinomy.xicity.transport.{Address, ClientMonitor, DefaultBehavior}
 
 object ClientExample {
   def run(): Unit = {

@@ -1,6 +1,6 @@
 package com.machinomy.xicity
 
-import com.machinomy.xicity.connectivity.Address
+import com.machinomy.xicity.transport.Address
 
 import scala.concurrent.Future
 

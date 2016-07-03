@@ -1,4 +1,4 @@
-package com.machinomy.xicity.connectivity
+package com.machinomy.xicity.transport
 
 import akka.actor.ActorRef
 

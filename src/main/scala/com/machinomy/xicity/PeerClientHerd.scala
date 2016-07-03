@@ -1,7 +1,7 @@
 package com.machinomy.xicity
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
-import com.machinomy.xicity.connectivity.Address
+import com.machinomy.xicity.transport.Address
 
 import scala.util.Random
 

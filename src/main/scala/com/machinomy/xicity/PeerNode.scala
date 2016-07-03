@@ -2,7 +2,7 @@ package com.machinomy.xicity
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import com.github.nscala_time.time.Imports._
-import com.machinomy.xicity.connectivity.Address
+import com.machinomy.xicity.transport.Address
 
 import scala.collection.mutable
 import scala.util.Random

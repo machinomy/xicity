@@ -1,6 +1,6 @@
 package com.machinomy.xicity
 
-import com.machinomy.xicity.connectivity.Address
+import com.machinomy.xicity.transport.Address
 
 case class RoutingTable(mapping: Map[Address, Set[Identifier]]) {
   def +(m: (Address, Set[Identifier])): RoutingTable = {
