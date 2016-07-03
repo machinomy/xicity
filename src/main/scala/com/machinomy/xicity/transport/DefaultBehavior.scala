@@ -35,13 +35,13 @@ object DefaultBehavior {
     }
 
     def newHandler(endpoint: Endpoint)(implicit context: ActorContext) =
-      context.actorOf(Connection.props(endpoint, connectionBehavior(endpoint)))
+      context.actorOf(ConnectionActor.props(endpoint, connectionBehavior(endpoint)))
 
     def connectionBehavior(endpoint: Endpoint) = IncomingConnectionBehavior(endpoint)
   }
 
 
-  case class IncomingConnectionBehavior(endpoint: Endpoint) extends Connection.Behavior with LazyLogging {
+  case class IncomingConnectionBehavior(endpoint: Endpoint) extends ConnectionActor.Behavior with LazyLogging {
     override def didRead(bytes: Array[Byte]) = {
       logger.info(s"Received ${bytes.length} bytes from $endpoint")
       this
@@ -102,13 +102,13 @@ object DefaultBehavior {
     }
 
     def newHandler(endpoint: Endpoint)(implicit context: ActorContext) =
-      context.actorOf(Connection.props(endpoint, connectionBehavior))
+      context.actorOf(ConnectionActor.props(endpoint, connectionBehavior))
 
     def connectionBehavior = OutgoingConnectionBehavior()
   }
 
   case class OutgoingConnectionBehavior(endpointOpt: Option[Endpoint] = None)
-    extends Connection.Behavior with LazyLogging {
+    extends ConnectionActor.Behavior with LazyLogging {
 
     override def didConnect(endpoint: Endpoint) = {
       logger.info(s"Connected to $endpoint")
