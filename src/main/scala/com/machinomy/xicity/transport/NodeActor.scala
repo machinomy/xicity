@@ -2,7 +2,7 @@ package com.machinomy.xicity.transport
 
 import akka.actor.{Actor, ActorContext, ActorRefFactory, Props}
 
-class Node(listenerAddress: Address, seeds: Set[Address], threshold: Byte, initialBehavior: Node.Behavior)
+class NodeActor(listenerAddress: Address, seeds: Set[Address], threshold: Byte, initialBehavior: NodeActor.Behavior)
   extends Actor {
 
   var behavior = initialBehavior
@@ -21,7 +21,7 @@ class Node(listenerAddress: Address, seeds: Set[Address], threshold: Byte, initi
 
 }
 
-object Node {
+object NodeActor {
   trait Behavior extends ClientMonitorActor.Behavior with Server.Behavior {
     def didStartNode(listenerAddress: Address,
                      seeds: Set[Address],
@@ -29,6 +29,6 @@ object Node {
     def didStopNode()(implicit context: ActorContext): Behavior
   }
 
-  def props(listenerAddress: Address, seeds: Set[Address], threshold: Byte, initialBehavior: Node.Behavior) =
-    Props(classOf[Node], listenerAddress, seeds, threshold, initialBehavior)
+  def props(listenerAddress: Address, seeds: Set[Address], threshold: Byte, initialBehavior: NodeActor.Behavior) =
+    Props(classOf[NodeActor], listenerAddress, seeds, threshold, initialBehavior)
 }
