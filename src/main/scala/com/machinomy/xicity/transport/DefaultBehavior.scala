@@ -66,17 +66,17 @@ object DefaultBehavior {
        with LazyLogging {
 
     override def addClient(address: Address)(implicit context: ActorContext) = {
-      val actor = context.actorOf(Client.props(address, clientBehavior))
+      val actor = context.actorOf(ClientActor.props(address, clientActorBehavior))
       logger.info(s"Adding client connected to $address")
       copy(clients.updated(address, actor))
     }
 
-    def clientBehavior = ClientBehavior(this)
+    def clientActorBehavior = ClientActorBehavior(this)
   }
 
 
-  case class ClientBehavior(clientMonitorBehavior: ClientMonitorBehavior, endpointOpt: Option[Endpoint] = None)
-    extends Client.Behavior
+  case class ClientActorBehavior(clientMonitorBehavior: ClientMonitorBehavior, endpointOpt: Option[Endpoint] = None)
+    extends ClientActor.Behavior
        with LazyLogging {
 
     override def didConnect(endpoint: Endpoint,

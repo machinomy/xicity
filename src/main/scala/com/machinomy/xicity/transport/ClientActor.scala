@@ -5,7 +5,7 @@ import java.net.InetSocketAddress
 import akka.actor.{Actor, ActorContext, ActorLogging, Props}
 import akka.io.{IO, Tcp}
 
-class Client(address: Address, initialBehavior: Client.Behavior) extends Actor with ActorLogging {
+class ClientActor(address: Address, initialBehavior: ClientActor.Behavior) extends Actor with ActorLogging {
   var behavior = initialBehavior
 
   override def preStart(): Unit = {
@@ -30,7 +30,7 @@ class Client(address: Address, initialBehavior: Client.Behavior) extends Actor w
   }
 }
 
-object Client {
+object ClientActor {
   trait Behavior {
     def didConnect(endpoint: Endpoint,
                    remoteAddress: InetSocketAddress,
@@ -39,5 +39,5 @@ object Client {
     def didClose(): Behavior
   }
 
-  def props(address: Address, behavior: Behavior) = Props(classOf[Client], address, behavior)
+  def props(address: Address, behavior: Behavior) = Props(classOf[ClientActor], address, behavior)
 }
