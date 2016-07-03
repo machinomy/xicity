@@ -15,11 +15,11 @@ object DefaultBehavior {
       copy(localAddressOpt = Some(localAddress))
     }
 
-    override def didConnect(remoteAddress: InetSocketAddress, wire: ActorRef)(implicit context: ActorContext) = {
+    override def didConnect(remoteAddress: InetSocketAddress, connection: ActorRef)(implicit context: ActorContext) = {
       val address = Address(remoteAddress)
-      val endpoint = Endpoint(address, wire)
+      val endpoint = Endpoint(address, Wire(connection))
       val handler = newHandler(endpoint)
-      wire ! Tcp.Register(handler)
+      connection ! Tcp.Register(handler)
       logger.info(s"Server bound to $localAddressOpt got connection from $remoteAddress")
       copy(tmpHandlers = tmpHandlers + handler)
     }

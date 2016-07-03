@@ -16,7 +16,7 @@ class Client(address: Address, initialBehavior: Client.Behavior) extends Actor w
 
   override def receive = {
     case Tcp.Connected(remoteAddress, localAddress) =>
-      val endpoint = Endpoint(address, sender())
+      val endpoint = Endpoint(address, Wire(sender))
       behavior = behavior.didConnect(endpoint, remoteAddress, localAddress)
     case Tcp.CommandFailed(cmd) =>
       log.info(s"Command $cmd failed!")
