@@ -7,7 +7,7 @@ case class Identifier(n: BigInt) {
 }
 
 object Identifier {
-  val BYTES_LENGTH = 32 // SHA-256
+  val BYTES_LENGTH = 33
 
   def isOk(peerIdentifier: Identifier): Boolean = peerIdentifier.n.toByteArray.length <= BYTES_LENGTH
 
