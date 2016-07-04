@@ -3,12 +3,12 @@ package com.machinomy.xicity.network
 import akka.actor.{ActorRef, ActorRefFactory}
 import com.machinomy.xicity.transport.{ClientMonitorActor, DefaultBehavior, DefaultParameters}
 
-case class Client(refFactory: ActorRefFactory, clientMonitorOpt: Option[ActorRef] = None)
+case class LightNode(refFactory: ActorRefFactory, clientMonitorOpt: Option[ActorRef] = None)
 
-object Client {
-  def apply(refFactory: ActorRefFactory): Client = new Client(refFactory)
+object LightNode {
+  def apply(refFactory: ActorRefFactory): LightNode = new LightNode(refFactory)
 
-  def start(client: Client): Client = client.clientMonitorOpt match {
+  def start(client: LightNode): LightNode = client.clientMonitorOpt match {
     case Some(actorRef) =>
       client
     case None =>
@@ -21,7 +21,7 @@ object Client {
       client.copy(clientMonitorOpt = Some(clientMonitor))
   }
 
-  def stop(client: Client): Client = client.clientMonitorOpt match {
+  def stop(client: LightNode): LightNode = client.clientMonitorOpt match {
     case Some(actorRef) =>
       client.refFactory.stop(actorRef)
       client.copy(clientMonitorOpt = None)
