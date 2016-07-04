@@ -1,4 +1,4 @@
-package com.machinomy.xicity.protocol
+package com.machinomy.xicity.network
 
 import scodec.bits.BitVector
 import scodec.codecs._

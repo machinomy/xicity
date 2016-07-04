@@ -1,3 +1,7 @@
 package com.machinomy.xicity.transport
 
-case class Endpoint(address: Address, wire: Wire)
+import akka.actor.ActorContext
+
+case class Endpoint(address: Address, wire: Wire) {
+  def write[A <: Message.Message](message: A)(implicit context: ActorContext) = wire.write(Message.encode(message))
+}

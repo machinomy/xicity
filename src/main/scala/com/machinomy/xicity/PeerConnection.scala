@@ -5,7 +5,7 @@ import akka.actor.{ActorLogging, ActorRef, FSM, Props}
 import akka.io.Tcp
 import akka.pattern.ask
 import akka.util.ByteString
-import com.machinomy.xicity.protocol._
+import com.machinomy.xicity.network._
 import com.machinomy.xicity.transport.Address
 import scodec.{Attempt, DecodeResult}
 

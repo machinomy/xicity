@@ -69,7 +69,7 @@ class PeerNode(identifier: Identifier, logic: ActorRef) extends Actor with Actor
     case PeerNode.GetIdentifierCommand =>
       sender ! identifier
     case cmd: PeerNode.SendSingleMessageCommand =>
-      val closestConnectors: Set[Address] = routingTable.closestConnectors(cmd.to, identifier)
+      val closestConnectors: Set[Address] = routingTable.closestAddresses(cmd.to, identifier)
       log.info(s"For ${cmd.to} found the closest connectors: $closestConnectors")
       log.info(routingTable.toString)
       if (cmd.expiration > DateTime.now.getMillis / 1000) {
