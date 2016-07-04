@@ -1,6 +1,6 @@
 package com.machinomy.xicity.transport
 
-import akka.actor.{Actor, ActorLogging, Props}
+import akka.actor.{Actor, ActorContext, ActorLogging, Props}
 import akka.io.Tcp
 
 class ConnectionActor(endpoint: Endpoint, initialBehavior: ConnectionActor.Behavior) extends Actor with ActorLogging {
@@ -34,25 +34,25 @@ object ConnectionActor {
       * @param endpoint
       * @return
       */
-    def didConnect(endpoint: Endpoint): Behavior
+    def didConnect(endpoint: Endpoint)(implicit context: ActorContext): Behavior
 
     /** Connection close is initiated by the peer.
       *
       * @return
       */
-    def didDisconnect(): Behavior
+    def didDisconnect()(implicit context: ActorContext): Behavior
 
     /** Received something from the peer.
       *
       * @param bytes
       * @return
       */
-    def didRead(bytes: Array[Byte]): Behavior
+    def didRead(bytes: Array[Byte])(implicit context: ActorContext): Behavior
 
     /** Connection close is initiated by the code.
       *
       * @return
       */
-    def didClose(): Behavior
+    def didClose()(implicit context: ActorContext): Behavior
   }
 }

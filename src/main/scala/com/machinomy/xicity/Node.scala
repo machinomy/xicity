@@ -2,6 +2,7 @@ package com.machinomy.xicity
 
 import akka.actor.{ActorRef, ActorRefFactory}
 import com.machinomy.xicity.transport.Message.Shot
+import com.machinomy.xicity.transport.NodeActor
 
 case class Node(identifier: Identifier,
                 nodeActor: Option[ActorRef],
@@ -18,8 +19,9 @@ object Node {
     case Some(actorRef) =>
       node
     case None =>
-      val nodeActor = actorRefFactory.actorOf(NodeActor.props())
-      node.copy(nodeActor = Some(nodeActor))
+      //val nodeActor = actorRefFactory.actorOf(NodeActor.props())
+      //node.copy(nodeActor = Some(nodeActor))
+      node
   }
 
   def stop(node: Node)(implicit actorRefFactory: ActorRefFactory): Node = node.nodeActor match {

@@ -1,8 +1,7 @@
-package com.machinomy.xicity.network
+package com.machinomy.xicity.transport
 
 import akka.actor.ActorContext
-import com.machinomy.xicity.transport.{Endpoint, Message}
-import com.machinomy.xicity.transport.Message.{Message, PexResponse}
+import com.machinomy.xicity.transport.Message.Message
 
 class Messaging {
   def didClientConnect(endpoint: Endpoint)(implicit context: ActorContext): Unit = {

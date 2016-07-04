@@ -158,9 +158,9 @@ object Message {
     decodeResult.value
   }
 
-  sealed trait Message
-
   case class FailedEncodingError(message: String) extends Error(message)
+
+  sealed trait Message
 
   case class Hello(remoteAddress: Address, nonce: Int = new Random().nextInt) extends Message
 
