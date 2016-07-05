@@ -1,4 +1,6 @@
 import sbtrelease.ReleaseStateTransformations._
+import sbtrelease.ReleasePlugin.autoImport.ReleaseKeys._
+import sbtrelease.Version
 
 name := "xicity"
 
@@ -29,31 +31,32 @@ libraryDependencies ++= Seq(
   "com.jsuereth" %% "scala-arm" % "1.4"
 )
 
-releaseProcess := {
-  if (isSnapshot.value) {
-    Seq(
-      checkSnapshotDependencies,
-      inquireVersions,
-      runClean,
-      runTest,
-      publishArtifacts
-    )
-  } else {
-    Seq(
-      checkSnapshotDependencies,
-      inquireVersions,
-      runClean,
-      runTest,
-      setReleaseVersion,
-      commitReleaseVersion,
-      tagRelease,
-      publishArtifacts,
-      setNextVersion,
-      commitNextVersion,
-      pushChanges
-    )
-  }
+def doIfNotSnapshot(step: ReleaseStep) = {
+  ReleaseStep(
+    action = st => {
+      if (!st.get(versions).getOrElse((None, None))._1.toString.endsWith("-SNAPSHOT")) {
+        step.action(st)
+      }
+      st
+    },
+    check = step.check,
+    enableCrossBuild = step.enableCrossBuild
+  )
 }
+
+releaseProcess := Seq[ReleaseStep](
+  checkSnapshotDependencies,
+  inquireVersions,
+  runClean,
+  runTest,
+  doIfNotSnapshot(setReleaseVersion),
+  doIfNotSnapshot(commitReleaseVersion),
+  doIfNotSnapshot(tagRelease),
+  publishArtifacts,
+  doIfNotSnapshot(setNextVersion),
+  doIfNotSnapshot(commitNextVersion),
+  doIfNotSnapshot(pushChanges)
+)
 
 publishTo := {
   if (isSnapshot.value)
