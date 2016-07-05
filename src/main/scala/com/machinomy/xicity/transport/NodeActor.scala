@@ -19,6 +19,7 @@ class NodeActor(initialBehavior: NodeActor.Behavior) extends Actor with ActorLog
   def receiveNodeActorEvents: Receive = {
     case NodeActor.DidOutgoingConnection(endpoint) =>
       log.info(s"Did outgoing connection to $endpoint")
+
     case NodeActor.KnownIdentifiers(except) =>
       sender ! routingTable.identifiers(except)
     case NodeActor.AddIdentifiers(endpoint, identifiers) =>
@@ -79,9 +80,7 @@ object NodeActor {
     def didIncomingClose(endpoint: Endpoint)(implicit context: ActorContext): Unit =
       for (selfActor <- selfActorOpt) selfActor ! DidIncomingClose(endpoint)
 
-    def didRead(endpoint: Endpoint, bytes: Array[Byte]): Unit = Message.decode(bytes) match {
-      case
-    }
+    def didRead(endpoint: Endpoint, bytes: Array[Byte]): Unit = ???
 
     def knownIdentifiers(except: Endpoint): Future[Set[Identifier]] = selfActorOpt match {
       case Some(selfActor) =>
