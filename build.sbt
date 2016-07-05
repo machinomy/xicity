@@ -30,5 +30,10 @@ libraryDependencies ++= Seq(
   "com.jsuereth" %% "scala-arm" % "1.4"
 )
 
-publishTo := Some("Machinomy" at "http://machinomy.com:8081/artifactory/libs-release-local/;build.timestamp=" + new java.util.Date().getTime)
+publishTo := {
+  if (isSnapshot.value)
+    Some("Machinomy" at "http://machinomy.com:8081/artifactory/libs-release-local/")
+  else
+    Some("Machinomy" at "http://machinomy.com:8081/artifactory/libs-snapshot-local/;build.timestamp=" + new java.util.Date().getTime)
+}
 credentials += Credentials(new File("credentials.properties"))
