@@ -24,13 +24,9 @@ class IncomingConnectionBehavior extends Connection.Behavior {
       log.info(s"Closed...")
       forward(m)
       context.stop(self)
-    case Connection.DidRead(bytes) =>
-      Message.decode(bytes) match {
-        case Some(message) =>
-          forward(message)
-        case None =>
-          log.error(s"Received ${bytes.length} bytes, can not decode")
-      }
+    case message =>
+      log.info(s"DidRead: $message")
+      forward(message)
   }
 
   def forward(message: Any) = for (messaging <- messagingOpt) messaging ! message

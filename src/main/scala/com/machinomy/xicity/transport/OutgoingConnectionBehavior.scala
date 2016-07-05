@@ -1,39 +1,43 @@
 package com.machinomy.xicity.transport
 
-import akka.actor.{ActorRef, Props}
+import akka.actor.{Actor, ActorLogging, Props}
 
-class OutgoingConnectionBehavior extends Connection.Behavior {
-  var endpointOpt: Option[Endpoint] = None
-  var messagingOpt: Option[ActorRef] = None
+import scala.util.Random
 
-  override def preStart(): Unit = {
-    val messaging = context.actorOf(OutgoingConnectionMessaging.props())
-    messagingOpt = Some(messaging)
+class OutgoingConnectionBehavior extends Actor with ActorLogging {
+  override def receive: Receive = expectConnect orElse expectFailure
+
+  def expectConnect: Receive = {
+    case Connection.DidConnect(endpoint, remoteAddress, localAddress) =>
+      log.info(s"Connected to $endpoint, saying Hello")
+      val nonce = Random.nextInt()
+      val helloMessage = Message.Hello(endpoint.address, nonce)
+      endpoint.write(helloMessage)
+      context.become(expectHelloResponse(nonce, endpoint) orElse expectFailure)
   }
 
-  override def handle: Handle = {
-    case m @ Connection.DidConnect(endpoint, remoteAddress, localAddress) =>
-      log.info(s"Connected to $endpoint")
-      endpointOpt = Some(endpoint)
-      forward(m)
-    case m @ Connection.DidDisconnect() =>
-      log.info(s"Disconnected...")
-      forward(m)
+  def expectFailure: Receive = {
+    case Connection.DidDisconnect() =>
+      log.info(s"Disconnected")
       context.stop(self)
-    case m @ Connection.DidClose() =>
-      log.info(s"Closed...")
-      forward(m)
+    case Connection.DidClose() =>
+      log.info(s"Closed")
       context.stop(self)
-    case Connection.DidRead(bytes) =>
-      Message.decode(bytes) match {
-        case Some(message) =>
-          forward(message)
-        case None =>
-          log.error(s"Received ${bytes.length} bytes, can not decode")
+  }
+
+  def expectHelloResponse(nonce: Int, endpoint: Endpoint): Receive = {
+    case Message.HelloResponse(myAddress, theirNonce) =>
+      if (theirNonce == nonce) {
+        log.info(s"Received valid HelloResponse")
+        context.become(expectMessages(endpoint) orElse expectFailure)
+      } else {
+        throw new IllegalArgumentException(s"Expected HelloResponse.nonce set to $nonce, got $theirNonce")
       }
   }
 
-  def forward(message: Any) = for (messaging <- messagingOpt) messaging ! message
+  def expectMessages(endpoint: Endpoint): Receive = {
+    case something => log.error(s"Got $something")
+  }
 }
 
 object OutgoingConnectionBehavior {

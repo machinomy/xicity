@@ -8,18 +8,27 @@ import akka.io.Tcp
 class Connection(endpoint: Endpoint, behavior: Connection.BehaviorWrap) extends Actor with ActorLogging {
   override def receive: Receive = {
     case Tcp.Connected(remoteAddress, localAddress) =>
+      log.info(s"Connected to $endpoint via $remoteAddress from $localAddress")
       behavior.didConnect(endpoint, remoteAddress, localAddress)
-    case Tcp.Received(byteString) =>
-      behavior.didRead(byteString.toArray)
     case Tcp.Closed =>
+      log.info(s"Closed")
       behavior.didClose()
       context.stop(self)
     case Tcp.ErrorClosed(_) =>
+      log.info(s"Disconnected")
       behavior.didDisconnect()
       context.stop(self)
     case Tcp.PeerClosed =>
+      log.info(s"Disconnected")
       behavior.didDisconnect()
       context.stop(self)
+    case Tcp.Received(byteString) =>
+      Message.decode(byteString.toArray) match {
+        case Some(message) =>
+          behavior.didRead(message)
+        case None =>
+          log.error(s"Received ${byteString.length} bytes, can not decode")
+      }
   }
 }
 
@@ -35,9 +44,6 @@ object Connection {
   /** Connection close is initiated by the code. */
   case class DidClose() extends Event
 
-  /** Received something from the peer. */
-  case class DidRead(bytes: Array[Byte]) extends Event
-
   def props(endpoint: Endpoint, behavior: Connection.BehaviorWrap) = Props(classOf[Connection], endpoint, behavior)
 
   case class BehaviorWrap(actorRef: ActorRef) extends ActorWrap {
@@ -47,8 +53,8 @@ object Connection {
       actorRef ! DidDisconnect()
     def didClose()(implicit sender: ActorRef) =
       actorRef ! DidClose()
-    def didRead(bytes: Array[Byte])(implicit sender: ActorRef) =
-      actorRef ! DidRead(bytes)
+    def didRead(message: Message.Message)(implicit sender: ActorRef) =
+      actorRef ! message
   }
 
   abstract class Behavior extends EventHandler[Connection.Event]
