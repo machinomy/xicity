@@ -1,13 +1,9 @@
 package com.machinomy.xicity.transport
 
-import java.net.InetSocketAddress
-
-import akka.actor.{Actor, ActorContext, ActorLogging, Props}
+import akka.actor.{Actor, ActorContext, ActorLogging, ActorRef, Props}
 import akka.io.{IO, Tcp}
 
-class Client(address: Address, initialBehavior: Client.Behavior) extends Actor with ActorLogging {
-  var behavior = initialBehavior
-
+class Client(address: Address, behavior: Client.BehaviorWrap) extends Actor with ActorLogging {
   override def preStart(): Unit = {
     implicit val actorSystem = context.system
     IO(Tcp) ! Tcp.Connect(address.address)
@@ -17,10 +13,10 @@ class Client(address: Address, initialBehavior: Client.Behavior) extends Actor w
   override def receive = {
     case Tcp.Connected(remoteAddress, localAddress) =>
       val endpoint = Endpoint(address, Wire(sender))
-      behavior = behavior.didConnect(endpoint, remoteAddress, localAddress)
+      behavior.didConnect(endpoint)
     case Tcp.CommandFailed(cmd) =>
       log.info(s"Command $cmd failed!")
-      behavior = behavior.didDisconnect()
+      behavior.didDisconnect()
       context.stop(self)
   }
 
@@ -31,13 +27,18 @@ class Client(address: Address, initialBehavior: Client.Behavior) extends Actor w
 }
 
 object Client {
-  trait Behavior {
-    def didConnect(endpoint: Endpoint,
-                   remoteAddress: InetSocketAddress,
-                   localAddress: InetSocketAddress)(implicit context: ActorContext): Behavior
-    def didDisconnect(): Behavior
-    def didClose(): Behavior
+  sealed trait Event
+  case class DidConnect(endpoint: Endpoint) extends Event
+  case class DidDisconnect() extends Event
+  case class DidClose() extends Event
+
+  def props(address: Address, behavior: Client.BehaviorWrap) = Props(classOf[Client], address, behavior)
+
+  case class BehaviorWrap(actorRef: ActorRef) extends ActorWrap {
+    def didConnect(endpoint: Endpoint)(implicit context: ActorContext) = actorRef ! DidConnect(endpoint)
+    def didDisconnect()(implicit context: ActorContext) = actorRef ! DidDisconnect()
+    def didClose()(implicit context: ActorContext) = actorRef ! DidClose()
   }
 
-  def props(address: Address, behavior: Behavior) = Props(classOf[Client], address, behavior)
+  trait Behavior extends EventHandler[Client.Event]
 }
