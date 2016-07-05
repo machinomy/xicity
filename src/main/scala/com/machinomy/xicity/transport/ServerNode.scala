@@ -3,12 +3,13 @@ package com.machinomy.xicity.transport
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import com.machinomy.xicity.Identifier
 
-class ServerNode(identifier: Identifier, parameters: Parameters) extends Actor with ActorLogging {
+class ServerNode(identifier: Identifier, node: Node.Wrap, parameters: Parameters) extends Actor with ActorLogging {
   var serverActorOpt: Option[ActorRef] = None
   var serverBehaviorActorOpt: Option[ActorRef] = None
 
   override def preStart(): Unit = {
-    val serverBehaviorActor = context.actorOf(ServerBehavior.props())
+    val selfWrap = Node.Wrap(self)
+    val serverBehaviorActor = context.actorOf(ServerBehavior.props(selfWrap))
     serverBehaviorActorOpt = Some(serverBehaviorActor)
     val serverBehaviorWrap = Server.BehaviorWrap(serverBehaviorActor)
     val serverActor = context.actorOf(Server.props(parameters.serverAddress, serverBehaviorWrap))
@@ -16,11 +17,17 @@ class ServerNode(identifier: Identifier, parameters: Parameters) extends Actor w
   }
 
   override def receive: Receive = {
-    case something => log.error(s"Did not expect anything, got $something")
+    case Node.DidAddConnection(endpoint, connectionBehavior) =>
+      node.didAddConnection(endpoint, connectionBehavior)
+    case Node.DidRemoveConnection(endpoint) =>
+      node.didRemoveConnection(endpoint)
+    case Node.DidPex(endpoint, identifiers) =>
+      node.didPex(endpoint, identifiers)
+    case something => throw new IllegalArgumentException(s"Got unexpected $something")
   }
 }
 
 object ServerNode {
-  def props(identifier: Identifier, parameters: Parameters = Parameters.default) =
-    Props(classOf[ServerNode], identifier, parameters)
+  def props(identifier: Identifier, node: Node.Wrap, parameters: Parameters = Parameters.default) =
+    Props(classOf[ServerNode], identifier, node, parameters)
 }

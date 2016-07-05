@@ -2,13 +2,17 @@ package com.machinomy.xicity.transport
 
 import akka.actor.{Actor, ActorLogging, Props}
 
-class IncomingConnectionBehavior extends Actor with ActorLogging {
+class IncomingConnectionBehavior(node: Node.Wrap) extends Actor with ActorLogging {
+  var endpointOpt: Option[Endpoint] = None
+
   override def receive: Receive = expectConnect orElse expectFailure
 
   def expectConnect: Receive = {
     case Connection.DidConnect(endpoint, remoteAddress, localAddress) =>
+      endpointOpt = Some(endpoint)
+      node.didAddConnection(endpoint, Connection.BehaviorWrap(self))
       log.info(s"Connected to $endpoint, waiting for Hello")
-      context.become(expectHello(endpoint) orElse expectFailure)
+      context.become(expectHello orElse expectFailure)
   }
 
   def expectFailure: Receive = {
@@ -18,21 +22,33 @@ class IncomingConnectionBehavior extends Actor with ActorLogging {
     case Connection.DidClose() =>
       log.info(s"Closed")
       context.stop(self)
+    case IncomingConnectionBehavior.Tick =>
+      // Pass
     case something => throw new IllegalArgumentException(s"Not expected anything, got $something")
   }
 
-  def expectHello(endpoint: Endpoint): Receive = {
+  def expectHello: Receive = {
     case Message.Hello(myAddress, nonce) =>
-      log.info(s"Received Hello, sending HelloResponse")
-      endpoint.write(Message.HelloResponse(endpoint.address, nonce))
-      context.become(expectMessages(endpoint) orElse expectFailure)
+      for (endpoint <- endpointOpt) {
+        log.info(s"Received Hello, sending HelloResponse")
+        endpoint.write(Message.HelloResponse(endpoint.address, nonce))
+        context.become(expectMessages orElse expectFailure)
+      }
   }
 
-  def expectMessages(endpoint: Endpoint): Receive = {
+  def expectMessages: Receive = {
     case something => log.error(s"Got $something")
   }
+
+  override def postStop(): Unit =
+    for (endpoint <- endpointOpt) {
+      node.didRemoveConnection(endpoint)
+    }
+
 }
 
 object IncomingConnectionBehavior {
-  def props(): Props = Props(classOf[IncomingConnectionBehavior])
+  object Tick
+
+  def props(node: Node.Wrap): Props = Props(classOf[IncomingConnectionBehavior], node)
 }
