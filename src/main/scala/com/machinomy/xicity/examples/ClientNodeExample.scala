@@ -2,7 +2,7 @@ package com.machinomy.xicity.examples
 
 import akka.actor.ActorSystem
 import com.machinomy.xicity.Identifier
-import com.machinomy.xicity.transport.{DefaultBehavior, DefaultParameters, NodeActor, Parameters}
+import com.machinomy.xicity.transport.{DefaultBehavior, NodeActor, Parameters}
 
 object ClientNodeExample {
   def run(): Unit = {
