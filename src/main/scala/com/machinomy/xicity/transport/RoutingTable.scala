@@ -15,7 +15,8 @@ case class RoutingTable(mapping: Map[Endpoint, Set[Identifier]]) {
     RoutingTable(mapping.updated(m._1, identifiers -- m._2))
   }
 
-  def identifiers: Set[Identifier] = mapping.values.fold(Set.empty) { case (a, b) => a ++ b }
+  def identifiers: Set[Identifier] = mapping.values.fold(Set.empty)(_ ++ _)
+  def identifiers(except: Endpoint): Set[Identifier] = (mapping - except).values.fold(Set.empty)(_ ++ _)
 
   lazy val reverseMapping: Map[Identifier, Set[Endpoint]] = {
     val explosion: Map[Identifier, Endpoint] = for {

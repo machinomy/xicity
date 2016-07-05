@@ -13,7 +13,6 @@ object DefaultBehavior {
   case class ClientNodeBehavior(identifier: Identifier,
                                 parameters: Parameters,
                                 selfActorOpt: Option[ActorRef] = None,
-                                var routingTable: RoutingTable = RoutingTable.empty,
                                 clientMonitorActorOpt: Option[ActorRef] = None)
     extends NodeActor.Behavior
        with LazyLogging {
@@ -35,33 +34,6 @@ object DefaultBehavior {
       case Some(actorRef) =>
         context.stop(actorRef)
         copy(clientMonitorActorOpt = None, selfActorOpt = None)
-    }
-
-    override def didOutgoingConnection(endpoint: Endpoint)(implicit context: ActorContext): Unit = {
-      logger.info(s"Made outgoing connection to $endpoint")
-      endpoint.write(Message.Hello(endpoint.address))
-    }
-
-    override def didRead(endpoint: Endpoint, bytes: Array[Byte])(implicit context: ActorContext): Unit = Message.decode(bytes) match {
-      case Some(message) => println(s"Received $message")
-      case None =>
-        println(s"Received ${bytes.length} bytes from $endpoint")
-    }
-
-    override def didIncomingConnection(endpoint: Endpoint)(implicit context: ActorContext): Unit = ???
-
-    override def didOutgoingDisconnect(endpoint: Endpoint)(implicit context: ActorContext): Unit = ???
-
-    override def didIncomingClose(endpoint: Endpoint)(implicit context: ActorContext): Unit = ???
-
-    override def didOutgoingClose(endpoint: Endpoint)(implicit context: ActorContext): Unit = ???
-
-    override def didIncomingDisconnect(endpoint: Endpoint)(implicit context: ActorContext): Unit = ???
-
-    override def knownIdentifiers(except: Endpoint): Set[Identifier] = routingTable.identifiers
-
-    override def addIdentifiers(endpoint: Endpoint, identifiers: Set[Identifier]): Unit = {
-      routingTable += (endpoint -> identifiers)
     }
   }
 
@@ -102,17 +74,9 @@ object DefaultBehavior {
 
   case class IncomingConnectionBehavior(nodeBehavior: NodeActor.Behavior, endpoint: Endpoint) extends ConnectionActor.Behavior with LazyLogging {
     override def didRead(bytes: Array[Byte])(implicit context: ActorContext) = Message.decode(bytes) match {
-      case Some(message) => message match {
-        case Message.Hello(myAddress, nonce) =>
-          logger.info(s"Received Hello from $endpoint")
-          endpoint.write(Message.HelloResponse(endpoint.address, nonce))
-          this
-        case Message.Pex(identifiers) =>
-          logger.info(s"Received Pex from $endpoint")
-          nodeBehavior.addIdentifiers(endpoint, identifiers)
-          endpoint.write(Message.PexResponse(nodeBehavior.knownIdentifiers(endpoint)))
-          this
-      }
+      case Some(message) =>
+        for (selfActor)
+        nodeBehavior.selfActorOpt ! message
       case None =>
         logger.info(s"Received something wrong: $bytes")
         this
@@ -181,21 +145,36 @@ object DefaultBehavior {
     def connectionBehavior = OutgoingConnectionBehavior(nodeBehavior)
   }
 
-  case class OutgoingConnectionBehavior(nodeBehavior: NodeActor.Behavior, endpointOpt: Option[Endpoint] = None)
-    extends ConnectionActor.Behavior with LazyLogging {
+  case class OutgoingConnectionBehavior(nodeBehavior: NodeActor.Behavior,
+                                        endpointOpt: Option[Endpoint] = None,
+                                        helloNonceOpt: Option[Int] = None)
+     extends ConnectionActor.Behavior
+        with LazyLogging {
 
     override def didConnect(endpoint: Endpoint)(implicit context: ActorContext) = {
       logger.info(s"Connected to $endpoint")
-      nodeBehavior.didOutgoingConnection(endpoint)
-      copy(endpointOpt = Some(endpoint))
+      val helloMessage = Message.Hello(endpoint.address)
+      endpoint.write(helloMessage)
+      copy(endpointOpt = Some(endpoint), helloNonceOpt = Some(helloMessage.nonce))
     }
 
-    override def didRead(bytes: Array[Byte])(implicit context: ActorContext) = {
-      for (endpoint <- endpointOpt) {
-        nodeBehavior.didRead(endpoint, bytes)
-        logger.info(s"Received ${bytes.length} bytes from $endpoint")
+    override def didRead(bytes: Array[Byte])(implicit context: ActorContext) = endpointOpt match {
+      case Some(endpoint) => Message.decode(bytes) match {
+        case Some(message) =>
+          message match {
+            case Message.HelloResponse(myAddress, nonce) =>
+              helloNonceOpt match {
+                case Some(helloNonce) =>
+                case None => throw new IllegalArgumentException(s"Not expected HelloResponse")
+              }
+          }
+        case None =>
+          logger.error(s"Can not decode $bytes into Message")
+          this
       }
-      this
+      case None =>
+        logger.error(s"Read $bytes from no endpoint")
+        this
     }
 
     override def didDisconnect()(implicit context: ActorContext) = {
