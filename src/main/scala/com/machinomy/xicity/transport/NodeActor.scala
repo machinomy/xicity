@@ -1,6 +1,7 @@
 package com.machinomy.xicity.transport
 
-import akka.actor.{Actor, ActorContext, ActorLogging, Props}
+import akka.actor.{Actor, ActorContext, ActorLogging, ActorRef, Props}
+import com.machinomy.xicity.Identifier
 
 class NodeActor(initialBehavior: NodeActor.Behavior) extends Actor with ActorLogging {
   var behavior = initialBehavior
@@ -29,6 +30,9 @@ object NodeActor {
     def didIncomingDisconnect(endpoint: Endpoint)(implicit context: ActorContext): Unit
     def didIncomingClose(endpoint: Endpoint)(implicit context: ActorContext): Unit
     def didRead(endpoint: Endpoint, bytes: Array[Byte])(implicit context: ActorContext): Unit
+
+    def knownIdentifiers(except: Endpoint): Set[Identifier]
+    def addIdentifiers(endpoint: Endpoint, identifiers: Set[Identifier]): Unit
   }
 
   def props(behavior: Behavior) = Props(classOf[NodeActor], behavior)

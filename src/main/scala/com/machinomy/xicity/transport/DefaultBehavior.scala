@@ -4,6 +4,7 @@ import java.net.InetSocketAddress
 import akka.actor.{ActorContext, ActorRef}
 import akka.io.Tcp
 import com.machinomy.xicity.Identifier
+import com.machinomy.xicity.transport.Message.Hello
 import com.machinomy.xicity.transport.NodeActor.Behavior
 import com.typesafe.scalalogging.LazyLogging
 
@@ -43,7 +44,8 @@ object DefaultBehavior {
 
     override def didRead(endpoint: Endpoint, bytes: Array[Byte])(implicit context: ActorContext): Unit = Message.decode(bytes) match {
       case Some(message) => println(s"Received $message")
-      case None => println(s"Received ${bytes.length} bytes from $endpoint")
+      case None =>
+        println(s"Received ${bytes.length} bytes from $endpoint")
     }
 
     override def didIncomingConnection(endpoint: Endpoint)(implicit context: ActorContext): Unit = ???
@@ -55,6 +57,12 @@ object DefaultBehavior {
     override def didOutgoingClose(endpoint: Endpoint)(implicit context: ActorContext): Unit = ???
 
     override def didIncomingDisconnect(endpoint: Endpoint)(implicit context: ActorContext): Unit = ???
+
+    override def knownIdentifiers(except: Endpoint): Set[Identifier] = routingTable.identifiers
+
+    override def addIdentifiers(endpoint: Endpoint, identifiers: Set[Identifier]): Unit = {
+      routingTable += (endpoint -> identifiers)
+    }
   }
 
   case class ServerBehavior(nodeBehavior: NodeActor.Behavior, localAddressOpt: Option[InetSocketAddress] = None, tmpHandlers: Set[ActorRef] = Set.empty)
@@ -93,10 +101,21 @@ object DefaultBehavior {
 
 
   case class IncomingConnectionBehavior(nodeBehavior: NodeActor.Behavior, endpoint: Endpoint) extends ConnectionActor.Behavior with LazyLogging {
-    override def didRead(bytes: Array[Byte])(implicit context: ActorContext) = {
-      nodeBehavior.didRead(endpoint, bytes)
-      logger.info(s"Received ${bytes.length} bytes from $endpoint")
-      this
+    override def didRead(bytes: Array[Byte])(implicit context: ActorContext) = Message.decode(bytes) match {
+      case Some(message) => message match {
+        case Message.Hello(myAddress, nonce) =>
+          logger.info(s"Received Hello from $endpoint")
+          endpoint.write(Message.HelloResponse(endpoint.address, nonce))
+          this
+        case Message.Pex(identifiers) =>
+          logger.info(s"Received Pex from $endpoint")
+          nodeBehavior.addIdentifiers(endpoint, identifiers)
+          endpoint.write(Message.PexResponse(nodeBehavior.knownIdentifiers(endpoint)))
+          this
+      }
+      case None =>
+        logger.info(s"Received something wrong: $bytes")
+        this
     }
 
     override def didDisconnect()(implicit context: ActorContext) = {
