@@ -9,7 +9,7 @@ object ServerExample {
   def run(): Unit = {
     implicit val system = ActorSystem()
     val address = Address.apply("0.0.0.0")
-    val nodeBehavior = new Behavior with LazyLogging {
+    /*val nodeBehavior = new Behavior with LazyLogging {
       var connections: Set[Endpoint] = Set.empty
       override def didRead(endpoint: Endpoint, bytes: Array[Byte])(implicit context: ActorContext): Unit = Message.decode(bytes) match {
         case Some(message) => println(s"Received $message")
@@ -30,6 +30,6 @@ object ServerExample {
       }
       override def start()(implicit context: ActorContext): Behavior = ???
     }
-    system.actorOf(Server.props(address, DefaultBehavior.ServerBehavior(nodeBehavior)))
+    system.actorOf(Server.props(address, DefaultBehavior.ServerBehavior(nodeBehavior)))*/
   }
 }

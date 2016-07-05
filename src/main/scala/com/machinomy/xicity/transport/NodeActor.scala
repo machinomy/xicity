@@ -2,6 +2,8 @@ package com.machinomy.xicity.transport
 
 import akka.actor.{Actor, ActorContext, ActorLogging, ActorRef, Props}
 import akka.pattern.ask
+import akka.util.Timeout
+import scala.concurrent.duration._
 import com.machinomy.xicity.Identifier
 
 import scala.concurrent.Future
@@ -84,6 +86,7 @@ object NodeActor {
 
     def knownIdentifiers(except: Endpoint): Future[Set[Identifier]] = selfActorOpt match {
       case Some(selfActor) =>
+        implicit val timeout = Timeout(5.seconds)
         selfActor.ask(KnownIdentifiers(except)).mapTo[Set[Identifier]]
       case None =>
         Future.successful(Set.empty)

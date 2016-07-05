@@ -9,7 +9,7 @@ object ClientMonitorExample {
   def run(): Unit = {
     implicit val system = ActorSystem()
     val serverAddress = Address.apply("127.0.0.1")
-    val nodeBehavior: NodeActor.Behavior = new Behavior {
+    /*val nodeBehavior: NodeActor.Behavior = new Behavior {
       override def didRead(endpoint: Endpoint, bytes: Array[Byte])(implicit context: ActorContext): Unit = {}
       override def stop()(implicit context: ActorContext): Behavior = this
       override def didIncomingConnection(endpoint: Endpoint)(implicit context: ActorContext): Unit = {}
@@ -21,6 +21,6 @@ object ClientMonitorExample {
       override def start()(implicit context: ActorContext): Behavior = this
     }
     val clientMonitorBehavior = DefaultBehavior.ClientMonitorBehavior(nodeBehavior)
-    system.actorOf(ClientMonitor.props(Set(serverAddress), 1, clientMonitorBehavior))
+    system.actorOf(ClientMonitor.props(Set(serverAddress), 1, clientMonitorBehavior))*/
   }
 }
