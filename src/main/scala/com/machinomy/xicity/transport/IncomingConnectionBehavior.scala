@@ -1,35 +1,35 @@
 package com.machinomy.xicity.transport
 
-import akka.actor.{ActorRef, Props}
+import akka.actor.{Actor, ActorLogging, Props}
 
-class IncomingConnectionBehavior extends Connection.Behavior {
-  var endpointOpt: Option[Endpoint] = None
-  var messagingOpt: Option[ActorRef] = None
+class IncomingConnectionBehavior extends Actor with ActorLogging {
+  override def receive: Receive = expectConnect orElse expectFailure
 
-  override def preStart(): Unit = {
-    val messaging = context.actorOf(IncomingConnectionMessaging.props())
-    messagingOpt = Some(messaging)
+  def expectConnect: Receive = {
+    case Connection.DidConnect(endpoint, remoteAddress, localAddress) =>
+      log.info(s"Connected to $endpoint, waiting for Hello")
+      context.become(expectHello(endpoint) orElse expectFailure)
   }
 
-  override def handle: Handle = {
-    case m @ Connection.DidConnect(endpoint, remoteAddress, localAddress) =>
-      log.info(s"Connected to $endpoint")
-      endpointOpt = Some(endpoint)
-      forward(m)
-    case m @ Connection.DidDisconnect() =>
-      log.info(s"Disconnected...")
-      forward(m)
+  def expectFailure: Receive = {
+    case Connection.DidDisconnect() =>
+      log.info(s"Disconnected")
       context.stop(self)
-    case m @ Connection.DidClose() =>
-      log.info(s"Closed...")
-      forward(m)
+    case Connection.DidClose() =>
+      log.info(s"Closed")
       context.stop(self)
-    case message =>
-      log.info(s"DidRead: $message")
-      forward(message)
   }
 
-  def forward(message: Any) = for (messaging <- messagingOpt) messaging ! message
+  def expectHello(endpoint: Endpoint): Receive = {
+    case Message.Hello(myAddress, nonce) =>
+      log.info(s"Received Hello, sending HelloResponse")
+      endpoint.write(Message.HelloResponse(endpoint.address, nonce))
+      context.become(expectMessages(endpoint) orElse expectFailure)
+  }
+
+  def expectMessages(endpoint: Endpoint): Receive = {
+    case something => log.error(s"Got $something")
+  }
 }
 
 object IncomingConnectionBehavior {
