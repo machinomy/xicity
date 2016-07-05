@@ -5,7 +5,11 @@ import akka.actor.{Actor, ActorLogging, Props}
 import scala.util.Random
 
 class OutgoingConnectionBehavior(node: Node.Wrap, parameters: Parameters) extends Actor with ActorLogging {
+  import context.dispatcher
+
   var endpointOpt: Option[Endpoint] = None
+
+  val tick = context.system.scheduler.schedule(parameters.tickInitialDelay, parameters.tickInterval, self, OutgoingConnectionBehavior.Tick)
 
   override def receive: Receive = expectConnect orElse expectFailure
 
@@ -27,6 +31,8 @@ class OutgoingConnectionBehavior(node: Node.Wrap, parameters: Parameters) extend
     case Connection.DidClose() =>
       log.info(s"Closed")
       context.stop(self)
+    case OutgoingConnectionBehavior.Tick =>
+      // Do Nothing
     case something => throw new IllegalArgumentException(s"Not expected anything, got $something")
   }
 
@@ -41,6 +47,22 @@ class OutgoingConnectionBehavior(node: Node.Wrap, parameters: Parameters) extend
   }
 
   def expectMessages: Receive = {
+    case OutgoingConnectionBehavior.Tick =>
+      endpointOpt match {
+        case Some(endpoint) =>
+          for (identifiers <- node.getIdentifiers(endpoint)) endpoint.write(Message.Pex(identifiers))
+        case None =>
+          // Do Nothing
+      }
+    case Message.Pex(identifiers) =>
+      for (endpoint <- endpointOpt) {
+        node.didPex(endpoint, identifiers)
+        for (identifiers <- node.getIdentifiers(endpoint)) endpoint.write(Message.PexResponse(identifiers))
+      }
+    case Message.PexResponse(identifiers) =>
+      for (endpoint <- endpointOpt) {
+        node.didPex(endpoint, identifiers)
+      }
     case something => log.error(s"Got $something")
   }
 
@@ -51,5 +73,7 @@ class OutgoingConnectionBehavior(node: Node.Wrap, parameters: Parameters) extend
 }
 
 object OutgoingConnectionBehavior {
+  object Tick
+
   def props(node: Node.Wrap, parameters: Parameters) = Props(classOf[OutgoingConnectionBehavior], node, parameters)
 }
