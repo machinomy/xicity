@@ -3,7 +3,7 @@ package com.machinomy.xicity.transport
 import akka.actor.{Actor, ActorContext, ActorLogging, Props}
 import akka.io.Tcp
 
-class ConnectionActor(endpoint: Endpoint, initialBehavior: ConnectionActor.ABehavior) extends Actor with ActorLogging {
+class Connection(endpoint: Endpoint, initialBehavior: Connection.ABehavior) extends Actor with ActorLogging {
   var behavior = initialBehavior
 
   override def receive: Receive = {
@@ -24,14 +24,14 @@ class ConnectionActor(endpoint: Endpoint, initialBehavior: ConnectionActor.ABeha
 
 }
 
-object ConnectionActor {
+object Connection {
   sealed trait Event
   case class DidConnect(endpoint: Endpoint) extends Event
   case class DidDisconnect() extends Event
   case class DidRead(bytes: Array[Byte]) extends Event
   case class DidClose() extends Event
 
-  def props(endpoint: Endpoint, behavior: ABehavior) = Props(classOf[ConnectionActor], endpoint, behavior)
+  def props(endpoint: Endpoint, behavior: ABehavior) = Props(classOf[Connection], endpoint, behavior)
 
   trait ABehavior {
 

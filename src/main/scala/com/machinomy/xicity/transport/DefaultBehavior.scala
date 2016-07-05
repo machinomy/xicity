@@ -66,13 +66,13 @@ object DefaultBehavior {
     }
 
     def newHandler(endpoint: Endpoint)(implicit context: ActorContext) =
-      context.actorOf(ConnectionActor.props(endpoint, connectionBehavior(endpoint)))
+      context.actorOf(Connection.props(endpoint, connectionBehavior(endpoint)))
 
     def connectionBehavior(endpoint: Endpoint) = IncomingConnectionBehavior(nodeBehavior, endpoint)
   }
 
 
-  case class IncomingConnectionBehavior(nodeBehavior: NodeActor.Behavior, endpoint: Endpoint) extends ConnectionActor.ABehavior with LazyLogging {
+  case class IncomingConnectionBehavior(nodeBehavior: NodeActor.Behavior, endpoint: Endpoint) extends Connection.ABehavior with LazyLogging {
     override def didRead(bytes: Array[Byte])(implicit context: ActorContext) = Message.decode(bytes) match {
       case Some(message) =>
         for (selfActor)
@@ -140,7 +140,7 @@ object DefaultBehavior {
     }
 
     def newHandler(endpoint: Endpoint)(implicit context: ActorContext) =
-      context.actorOf(ConnectionActor.props(endpoint, connectionBehavior))
+      context.actorOf(Connection.props(endpoint, connectionBehavior))
 
     def connectionBehavior = OutgoingConnectionBehavior(nodeBehavior)
   }
@@ -148,7 +148,7 @@ object DefaultBehavior {
   case class OutgoingConnectionBehavior(nodeBehavior: NodeActor.Behavior,
                                         endpointOpt: Option[Endpoint] = None,
                                         helloNonceOpt: Option[Int] = None)
-     extends ConnectionActor.ABehavior
+     extends Connection.ABehavior
         with LazyLogging {
 
     override def didConnect(endpoint: Endpoint)(implicit context: ActorContext) = {
