@@ -4,11 +4,12 @@ import akka.actor.{Actor, ActorLogging, Props}
 
 import scala.util.Random
 
-class OutgoingConnectionBehavior extends Actor with ActorLogging {
+class OutgoingConnectionBehavior(node: Node.Wrap) extends Actor with ActorLogging {
   override def receive: Receive = expectConnect orElse expectFailure
 
   def expectConnect: Receive = {
     case Connection.DidConnect(endpoint, remoteAddress, localAddress) =>
+      node.didAddConnection(endpoint, Connection.BehaviorWrap(self))
       log.info(s"Connected to $endpoint, saying Hello")
       val nonce = Random.nextInt()
       val helloMessage = Message.Hello(endpoint.address, nonce)
@@ -42,5 +43,5 @@ class OutgoingConnectionBehavior extends Actor with ActorLogging {
 }
 
 object OutgoingConnectionBehavior {
-  def props() = Props(classOf[OutgoingConnectionBehavior])
+  def props(node: Node.Wrap) = Props(classOf[OutgoingConnectionBehavior], node)
 }

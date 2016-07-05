@@ -1,7 +1,6 @@
 package com.machinomy.xicity.examples
 
 import akka.actor.{ActorContext, ActorSystem}
-import com.machinomy.xicity.transport.NodeActor.Behavior
 import com.machinomy.xicity.transport._
 import com.typesafe.scalalogging.LazyLogging
 

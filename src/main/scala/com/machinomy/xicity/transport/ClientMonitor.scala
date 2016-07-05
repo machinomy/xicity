@@ -4,14 +4,13 @@ import akka.actor.{Actor, ActorContext, ActorLogging, Props}
 
 import scala.util.Random
 
-class ClientMonitor(seeds: Set[Address], threshold: Byte) extends Actor with ActorLogging {
+class ClientMonitor(seeds: Set[Address], threshold: Byte, node: Node.Wrap) extends Actor with ActorLogging {
   assert(threshold >= 0)
 
   override def preStart(): Unit = {
     log.info(s"Started ClientMonitor")
     addClients(selectSeeds(threshold))
   }
-
 
   override def receive = {
     case something => throw new IllegalArgumentException(s"Not planned to receive anything, got: $something")
@@ -26,9 +25,9 @@ class ClientMonitor(seeds: Set[Address], threshold: Byte) extends Actor with Act
     }
 
   def clientBehavior()(implicit context: ActorContext) =
-    Client.BehaviorWrap(context.actorOf(ClientBehavior.props()))
+    Client.BehaviorWrap(context.actorOf(ClientBehavior.props(node)))
 }
 
 object ClientMonitor {
-  def props(seeds: Set[Address], threshold: Byte) = Props(classOf[ClientMonitor], seeds, threshold)
+  def props(seeds: Set[Address], threshold: Byte, node: Node.Wrap) = Props(classOf[ClientMonitor], seeds, threshold, node)
 }
