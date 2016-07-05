@@ -1,12 +1,14 @@
 package com.machinomy.xicity.transport
 
+import java.net.InetSocketAddress
+
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.io.Tcp
 
 class Connection(endpoint: Endpoint, behavior: Connection.BehaviorWrap) extends Actor with ActorLogging {
   override def receive: Receive = {
     case Tcp.Connected(remoteAddress, localAddress) =>
-      behavior.didConnect(endpoint)
+      behavior.didConnect(endpoint, remoteAddress, localAddress)
     case Tcp.Received(byteString) =>
       behavior.didRead(byteString.toArray)
     case Tcp.Closed =>
@@ -25,7 +27,7 @@ object Connection {
   sealed trait Event
 
   /** Just instantiated a new connection. */
-  case class DidConnect(endpoint: Endpoint) extends Event
+  case class DidConnect(endpoint: Endpoint, remoteAddress: InetSocketAddress, localAddress: InetSocketAddress) extends Event
 
   /** Connection close is initiated by the peer. */
   case class DidDisconnect() extends Event
@@ -39,10 +41,14 @@ object Connection {
   def props(endpoint: Endpoint, behavior: Connection.BehaviorWrap) = Props(classOf[Connection], endpoint, behavior)
 
   case class BehaviorWrap(actorRef: ActorRef) extends ActorWrap {
-    def didConnect(endpoint: Endpoint)(implicit sender: ActorRef) = actorRef ! DidConnect(endpoint)
-    def didDisconnect()(implicit sender: ActorRef) = actorRef ! DidDisconnect()
-    def didClose()(implicit sender: ActorRef) = actorRef ! DidClose()
-    def didRead(bytes: Array[Byte])(implicit sender: ActorRef) = actorRef ! DidRead(bytes)
+    def didConnect(endpoint: Endpoint, remoteAddress: InetSocketAddress, localAddress: InetSocketAddress)(implicit sender: ActorRef) =
+      actorRef ! DidConnect(endpoint, remoteAddress, localAddress)
+    def didDisconnect()(implicit sender: ActorRef) =
+      actorRef ! DidDisconnect()
+    def didClose()(implicit sender: ActorRef) =
+      actorRef ! DidClose()
+    def didRead(bytes: Array[Byte])(implicit sender: ActorRef) =
+      actorRef ! DidRead(bytes)
   }
 
   abstract class Behavior extends EventHandler[Connection.Event]

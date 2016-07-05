@@ -5,9 +5,11 @@ import akka.io.Tcp
 
 class ClientBehavior extends Client.Behavior {
   override def handle: Handle = {
-    case Client.DidConnect(endpoint) =>
+    case Client.DidConnect(endpoint, remoteAddress, localAddress) =>
       log.info(s"Connected to $endpoint")
-      endpoint.wire.tell(Tcp.Register(newHandler(endpoint)), context.self)
+      val handler = newHandler(endpoint)
+      endpoint.wire.tell(Tcp.Register(handler), context.self)
+      handler ! Tcp.Connected(remoteAddress, localAddress)
     case Client.DidDisconnect() =>
       log.info(s"Disconnected")
       context.stop(self)

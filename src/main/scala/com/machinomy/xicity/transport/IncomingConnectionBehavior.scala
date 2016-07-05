@@ -6,7 +6,7 @@ class IncomingConnectionBehavior extends Connection.Behavior {
   var endpointOpt: Option[Endpoint] = None
 
   override def handle: Handle = {
-    case Connection.DidConnect(endpoint) =>
+    case Connection.DidConnect(endpoint, remoteAddress, localAddress) =>
       log.info(s"Connected to $endpoint")
       endpointOpt = Some(endpoint)
     case Connection.DidDisconnect() =>
