@@ -37,7 +37,7 @@ object DefaultBehavior {
   }
 
   case class ServerBehavior(nodeBehavior: NodeActor.Behavior, localAddressOpt: Option[InetSocketAddress] = None, tmpHandlers: Set[ActorRef] = Set.empty)
-    extends ServerActor.Behavior with LazyLogging {
+    extends Server.Behavior with LazyLogging {
 
     override def didBound(localAddress: InetSocketAddress) = {
       logger.info(s"Bound to $localAddress")
@@ -49,13 +49,13 @@ object DefaultBehavior {
       val endpoint = Endpoint(address, Wire(connection))
       val handler = newHandler(endpoint)
       connection ! Tcp.Register(handler)
-      logger.info(s"ServerActor bound to $localAddressOpt got connection from $remoteAddress")
+      logger.info(s"Server bound to $localAddressOpt got connection from $remoteAddress")
       nodeBehavior.didIncomingConnection(endpoint)
       copy(tmpHandlers = tmpHandlers + handler)
     }
 
     override def didDisconnect() = {
-      logger.info(s"ServerActor got unbound from $localAddressOpt")
+      logger.info(s"Server got unbound from $localAddressOpt")
       copy(localAddressOpt = None)
     }
 
@@ -76,7 +76,7 @@ object DefaultBehavior {
        with LazyLogging {
 
     override def addClient(address: Address)(implicit context: ActorContext) = {
-      val actor = context.actorOf(ClientActor.props(address, clientActorBehavior))
+      val actor = context.actorOf(Client.props(address, clientActorBehavior))
       logger.info(s"Adding client connected to $address")
       copy(clients = clients.updated(address, actor))
     }
@@ -86,7 +86,7 @@ object DefaultBehavior {
 
 
   case class ClientActorBehavior(nodeBehavior: NodeActor.Behavior, endpointOpt: Option[Endpoint] = None)
-    extends ClientActor.Behavior
+    extends Client.Behavior
        with LazyLogging {
 
     override def didConnect(endpoint: Endpoint,

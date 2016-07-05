@@ -30,6 +30,6 @@ object ServerExample {
       }
       override def start()(implicit context: ActorContext): Behavior = ???
     }
-    system.actorOf(ServerActor.props(address, DefaultBehavior.ServerBehavior(nodeBehavior)))
+    system.actorOf(Server.props(address, DefaultBehavior.ServerBehavior(nodeBehavior)))
   }
 }
