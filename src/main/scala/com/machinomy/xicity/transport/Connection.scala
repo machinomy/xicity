@@ -1,64 +1,60 @@
 package com.machinomy.xicity.transport
 
-import akka.actor.{Actor, ActorContext, ActorLogging, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.io.Tcp
 
-class Connection(endpoint: Endpoint, initialBehavior: Connection.ABehavior) extends Actor with ActorLogging {
-  var behavior = initialBehavior
-
+class Connection(endpoint: Endpoint, behavior: Connection.Behavior) extends Actor with ActorLogging {
   override def receive: Receive = {
     case Tcp.Connected(remoteAddress, localAddress) =>
-      behavior = behavior.didConnect(endpoint)
+      behavior.didConnect(endpoint)
     case Tcp.Received(byteString) =>
-      behavior = behavior.didRead(byteString.toArray)
+      behavior.didRead(byteString.toArray)
     case Tcp.Closed =>
-      behavior = behavior.didClose()
+      behavior.didClose()
       context.stop(self)
     case Tcp.ErrorClosed(_) =>
-      behavior = behavior.didDisconnect()
+      behavior.didDisconnect()
       context.stop(self)
     case Tcp.PeerClosed =>
-      behavior = behavior.didDisconnect()
+      behavior.didDisconnect()
       context.stop(self)
   }
-
 }
 
 object Connection {
   sealed trait Event
+
+  /** Just instantiated a new connection. */
   case class DidConnect(endpoint: Endpoint) extends Event
+
+  /** Connection close is initiated by the peer. */
   case class DidDisconnect() extends Event
-  case class DidRead(bytes: Array[Byte]) extends Event
+
+  /** Connection close is initiated by the code. */
   case class DidClose() extends Event
 
-  def props(endpoint: Endpoint, behavior: ABehavior) = Props(classOf[Connection], endpoint, behavior)
+  /** Received something from the peer. */
+  case class DidRead(bytes: Array[Byte]) extends Event
 
-  trait ABehavior {
+  def props(endpoint: Endpoint, behavior: ActorRef) = Props(classOf[Connection], endpoint, behavior)
 
-    /** Just instantiated a new connection.
-      *
-      * @param endpoint
-      * @return
-      */
-    def didConnect(endpoint: Endpoint)(implicit context: ActorContext): ABehavior
+  case class Behavior(actorRef: ActorRef) extends ActorWrap {
+    def didConnect(endpoint: Endpoint)(implicit sender: ActorRef) = actorRef ! DidConnect(endpoint)
+    def didDisconnect()(implicit sender: ActorRef) = actorRef ! DidDisconnect()
+    def didClose()(implicit sender: ActorRef) = actorRef ! DidClose()
+    def didRead(bytes: Array[Byte])(implicit sender: ActorRef) = actorRef ! DidRead(bytes)
+  }
 
-    /** Connection close is initiated by the peer.
-      *
-      * @return
-      */
-    def didDisconnect()(implicit context: ActorContext): ABehavior
+  trait BehaviorActor extends Actor with ActorLogging {
+    type Handle = PartialFunction[Event, Unit]
 
-    /** Received something from the peer.
-      *
-      * @param bytes
-      * @return
-      */
-    def didRead(bytes: Array[Byte])(implicit context: ActorContext): ABehavior
+    override def receive: Receive = {
+      case something => something match {
+        case event: Connection.Event => handle(event)
+        case anything => throw new IllegalArgumentException(s"Received unexpected $anything")
+      }
+    }
 
-    /** Connection close is initiated by the code.
-      *
-      * @return
-      */
-    def didClose()(implicit context: ActorContext): ABehavior
+    def handle: Handle
   }
 }
