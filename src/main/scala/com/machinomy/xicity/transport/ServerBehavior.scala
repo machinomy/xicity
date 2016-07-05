@@ -2,6 +2,7 @@ package com.machinomy.xicity.transport
 
 import java.net.InetSocketAddress
 
+import akka.actor.Props
 import akka.io.Tcp
 
 class ServerBehavior extends Server.Behavior {
@@ -30,4 +31,8 @@ class ServerBehavior extends Server.Behavior {
   def newHandler(endpoint: Endpoint) = context.actorOf(Connection.props(endpoint, connectionBehavior()))
 
   def connectionBehavior() = Connection.BehaviorWrap(context.actorOf(IncomingConnectionBehavior.props()))
+}
+
+object ServerBehavior {
+  def props() = Props(classOf[ServerBehavior])
 }
