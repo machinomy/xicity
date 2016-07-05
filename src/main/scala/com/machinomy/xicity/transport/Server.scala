@@ -4,6 +4,7 @@ import java.net.InetSocketAddress
 
 import akka.actor._
 import akka.io.{IO, Tcp}
+import io.netty.channel.local.LocalAddress
 
 class Server(local: Address, behavior: Server.BehaviorWrap) extends Actor with ActorLogging {
 
@@ -19,7 +20,7 @@ class Server(local: Address, behavior: Server.BehaviorWrap) extends Actor with A
       behavior.didBound(localAddress)
     case Tcp.Connected(remoteAddress, localAddress) =>
       log.info(s"Connected to $localAddress")
-      behavior.didConnect(remoteAddress, sender)
+      behavior.didConnect(sender, remoteAddress, localAddress)
     case Tcp.CommandFailed(cmd: Tcp.Bind) =>
       log.error(s"Can not bind to ${cmd.localAddress}")
       context.stop(self)
@@ -38,7 +39,7 @@ class Server(local: Address, behavior: Server.BehaviorWrap) extends Actor with A
 object Server {
   sealed trait Event
   case class DidBound(localAddress: InetSocketAddress) extends Event
-  case class DidConnect(remoteAddress: InetSocketAddress, tcpActorRef: ActorRef) extends Event
+  case class DidConnect(tcpActorRef: ActorRef, remoteAddress: InetSocketAddress, localAddress: InetSocketAddress) extends Event
   case class DidDisconnect() extends Event
   case class DidClose() extends Event
 
@@ -47,8 +48,8 @@ object Server {
   case class BehaviorWrap(actorRef: ActorRef) extends ActorWrap {
     def didBound(localAddress: InetSocketAddress)(implicit context: ActorContext) =
       actorRef ! DidBound(localAddress)
-    def didConnect(remoteAddress: InetSocketAddress, tcpActorRef: ActorRef)(implicit context: ActorContext) =
-      actorRef ! DidConnect(remoteAddress, tcpActorRef)
+    def didConnect(tcpActorRef: ActorRef, remoteAddress: InetSocketAddress, localAddress: InetSocketAddress)(implicit context: ActorContext) =
+      actorRef ! DidConnect(tcpActorRef, remoteAddress, localAddress)
     def didDisconnect()(implicit context: ActorContext) =
       actorRef ! DidDisconnect()
     def didClose()(implicit context: ActorContext) =

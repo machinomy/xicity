@@ -13,7 +13,7 @@ class OutgoingConnectionBehavior extends Connection.Behavior {
 
   override def handle: Handle = {
     case m @ Connection.DidConnect(endpoint, remoteAddress, localAddress) =>
-      log.info(s"OutgoingConnectionBehavior: Connected to $endpoint")
+      log.info(s"Connected to $endpoint")
       endpointOpt = Some(endpoint)
       forward(m)
     case m @ Connection.DidDisconnect() =>
@@ -25,7 +25,6 @@ class OutgoingConnectionBehavior extends Connection.Behavior {
       forward(m)
       context.stop(self)
     case Connection.DidRead(bytes) =>
-      log.info(s"Received $bytes")
       Message.decode(bytes) match {
         case Some(message) =>
           forward(message)

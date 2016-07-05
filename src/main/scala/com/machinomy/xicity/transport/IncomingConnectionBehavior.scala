@@ -1,23 +1,39 @@
 package com.machinomy.xicity.transport
 
-import akka.actor.Props
+import akka.actor.{ActorRef, Props}
 
 class IncomingConnectionBehavior extends Connection.Behavior {
   var endpointOpt: Option[Endpoint] = None
+  var messagingOpt: Option[ActorRef] = None
+
+  override def preStart(): Unit = {
+    val messaging = context.actorOf(IncomingConnectionMessaging.props())
+    messagingOpt = Some(messaging)
+  }
 
   override def handle: Handle = {
-    case Connection.DidConnect(endpoint, remoteAddress, localAddress) =>
+    case m @ Connection.DidConnect(endpoint, remoteAddress, localAddress) =>
       log.info(s"Connected to $endpoint")
       endpointOpt = Some(endpoint)
-    case Connection.DidDisconnect() =>
+      forward(m)
+    case m @ Connection.DidDisconnect() =>
       log.info(s"Disconnected...")
+      forward(m)
       context.stop(self)
-    case Connection.DidClose() =>
+    case m @ Connection.DidClose() =>
       log.info(s"Closed...")
+      forward(m)
       context.stop(self)
     case Connection.DidRead(bytes) =>
-      log.info(s"Received $bytes")
+      Message.decode(bytes) match {
+        case Some(message) =>
+          forward(message)
+        case None =>
+          log.error(s"Received ${bytes.length} bytes, can not decode")
+      }
   }
+
+  def forward(message: Any) = for (messaging <- messagingOpt) messaging ! message
 }
 
 object IncomingConnectionBehavior {

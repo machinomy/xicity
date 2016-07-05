@@ -13,7 +13,7 @@ class OutgoingConnectionMessaging extends Actor with ActorLogging {
       val nonce = Random.nextInt()
       val helloMessage = Message.Hello(endpoint.address, nonce)
       endpoint.write(helloMessage)
-      context.become(expectHelloResponse(nonce) orElse expectFailure)
+      context.become(expectHelloResponse(nonce, endpoint) orElse expectFailure)
   }
 
   def expectFailure: Receive = {
@@ -25,17 +25,17 @@ class OutgoingConnectionMessaging extends Actor with ActorLogging {
       context.stop(self)
   }
 
-  def expectHelloResponse(nonce: Int): Receive = {
+  def expectHelloResponse(nonce: Int, endpoint: Endpoint): Receive = {
     case Message.HelloResponse(myAddress, theirNonce) =>
       if (theirNonce == nonce) {
         log.info(s"Received valid HelloResponse")
-        context.become(expectMessages orElse expectFailure)
+        context.become(expectMessages(endpoint) orElse expectFailure)
       } else {
         throw new IllegalArgumentException(s"Expected HelloResponse.nonce set to $nonce, got $theirNonce")
       }
   }
 
-  def expectMessages: Receive = {
+  def expectMessages(endpoint: Endpoint): Receive = {
     case something => log.error(s"Got $something")
   }
 }

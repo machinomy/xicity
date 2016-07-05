@@ -12,11 +12,12 @@ class ServerBehavior extends Server.Behavior {
     case Server.DidBound(localAddress) =>
       localAddressOpt = Some(localAddress)
       log.info(s"Bound to $localAddress")
-    case Server.DidConnect(remoteAddress, tcpActorRef) =>
+    case Server.DidConnect(tcpActorRef, remoteAddress, localAddress) =>
       log.info(s"Received connection from $remoteAddress")
       val endpoint = Endpoint(Address(remoteAddress), Wire(tcpActorRef))
       val handler = newHandler(endpoint)
       tcpActorRef ! Tcp.Register(handler)
+      handler ! Tcp.Connected(remoteAddress, localAddress)
       log.info(s"Server bound to $localAddressOpt got connection from $remoteAddress")
     case Server.DidDisconnect() =>
       log.info(s"Disconnected")
