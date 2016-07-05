@@ -4,7 +4,6 @@ import java.net.InetSocketAddress
 import akka.actor.{ActorContext, ActorRef}
 import akka.io.Tcp
 import com.machinomy.xicity.Identifier
-import com.machinomy.xicity.transport.Message.Hello
 import com.machinomy.xicity.transport.NodeActor.Behavior
 import com.typesafe.scalalogging.LazyLogging
 
@@ -66,37 +65,11 @@ object DefaultBehavior {
     }
 
     def newHandler(endpoint: Endpoint)(implicit context: ActorContext) =
-      context.actorOf(Connection.props(endpoint, connectionBehavior(endpoint)))
+      context.actorOf(Connection.props(endpoint, connectionBehavior))
 
-    def connectionBehavior(endpoint: Endpoint) = IncomingConnectionBehavior(nodeBehavior, endpoint)
+    def connectionBehavior()(implicit context: ActorContext) =
+      Connection.BehaviorWrap(context.actorOf(IncomingConnectionBehavior.props()))
   }
-
-
-  case class IncomingConnectionBehavior(nodeBehavior: NodeActor.Behavior, endpoint: Endpoint) extends Connection.ABehavior with LazyLogging {
-    override def didRead(bytes: Array[Byte])(implicit context: ActorContext) = Message.decode(bytes) match {
-      case Some(message) =>
-        for (selfActor)
-        nodeBehavior.selfActorOpt ! message
-      case None =>
-        logger.info(s"Received something wrong: $bytes")
-        this
-    }
-
-    override def didDisconnect()(implicit context: ActorContext) = {
-      nodeBehavior.didIncomingDisconnect(endpoint)
-      logger.info(s"Peer $endpoint closed connection")
-      this
-    }
-
-    override def didClose()(implicit context: ActorContext) = {
-      nodeBehavior.didIncomingClose(endpoint)
-      logger.info(s"Closing connection to $endpoint")
-      this
-    }
-
-    override def didConnect(endpoint: Endpoint)(implicit context: ActorContext) = this // Is not called when a client have connected to a server.
-  }
-
 
   case class ClientMonitorBehavior(nodeBehavior: NodeActor.Behavior, clients: Map[Address, ActorRef] = Map.empty)
     extends ClientMonitorActor.Behavior
@@ -142,56 +115,7 @@ object DefaultBehavior {
     def newHandler(endpoint: Endpoint)(implicit context: ActorContext) =
       context.actorOf(Connection.props(endpoint, connectionBehavior))
 
-    def connectionBehavior = OutgoingConnectionBehavior(nodeBehavior)
+    def connectionBehavior()(implicit context: ActorContext) =
+      Connection.BehaviorWrap(context.actorOf(OutgoingConnectionBehavior.props()))
   }
-
-  case class OutgoingConnectionBehavior(nodeBehavior: NodeActor.Behavior,
-                                        endpointOpt: Option[Endpoint] = None,
-                                        helloNonceOpt: Option[Int] = None)
-     extends Connection.ABehavior
-        with LazyLogging {
-
-    override def didConnect(endpoint: Endpoint)(implicit context: ActorContext) = {
-      logger.info(s"Connected to $endpoint")
-      val helloMessage = Message.Hello(endpoint.address)
-      endpoint.write(helloMessage)
-      copy(endpointOpt = Some(endpoint), helloNonceOpt = Some(helloMessage.nonce))
-    }
-
-    override def didRead(bytes: Array[Byte])(implicit context: ActorContext) = endpointOpt match {
-      case Some(endpoint) => Message.decode(bytes) match {
-        case Some(message) =>
-          message match {
-            case Message.HelloResponse(myAddress, nonce) =>
-              helloNonceOpt match {
-                case Some(helloNonce) =>
-                case None => throw new IllegalArgumentException(s"Not expected HelloResponse")
-              }
-          }
-        case None =>
-          logger.error(s"Can not decode $bytes into Message")
-          this
-      }
-      case None =>
-        logger.error(s"Read $bytes from no endpoint")
-        this
-    }
-
-    override def didDisconnect()(implicit context: ActorContext) = {
-      for (endpoint <- endpointOpt) {
-        nodeBehavior.didOutgoingDisconnect(endpoint)
-        logger.info(s"Peer $endpoint closed connection")
-      }
-      this
-    }
-
-    override def didClose()(implicit context: ActorContext)= {
-      for (endpoint <- endpointOpt) {
-        nodeBehavior.didOutgoingClose(endpoint)
-        logger.info(s"Closing connection to $endpoint")
-      }
-      this
-    }
-  }
-
 }
