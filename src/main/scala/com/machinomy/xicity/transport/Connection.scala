@@ -36,7 +36,7 @@ object Connection {
   /** Received something from the peer. */
   case class DidRead(bytes: Array[Byte]) extends Event
 
-  def props(endpoint: Endpoint, behavior: ActorRef) = Props(classOf[Connection], endpoint, behavior)
+  def props(endpoint: Endpoint, behavior: Connection.BehaviorWrap) = Props(classOf[Connection], endpoint, behavior)
 
   case class BehaviorWrap(actorRef: ActorRef) extends ActorWrap {
     def didConnect(endpoint: Endpoint)(implicit sender: ActorRef) = actorRef ! DidConnect(endpoint)
