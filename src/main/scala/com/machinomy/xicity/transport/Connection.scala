@@ -45,7 +45,7 @@ object Connection {
     def didRead(bytes: Array[Byte])(implicit sender: ActorRef) = actorRef ! DidRead(bytes)
   }
 
-  trait BehaviorActor extends Actor with ActorLogging {
+  trait Behavior extends Actor with ActorLogging {
     type Handle = PartialFunction[Event, Unit]
 
     override def receive: Receive = {
