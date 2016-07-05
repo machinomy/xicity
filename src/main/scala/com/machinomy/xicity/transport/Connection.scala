@@ -44,7 +44,7 @@ object Connection {
   /** Connection close is initiated by the code. */
   case class DidClose() extends Event
 
-  case class DoWrite(message: Message.Shot) extends Event
+  case class DoWrite(message: Message.Message) extends Event
 
   def props(endpoint: Endpoint, behavior: Connection.BehaviorWrap) = Props(classOf[Connection], endpoint, behavior)
 
@@ -57,7 +57,7 @@ object Connection {
       actorRef ! DidClose()
     def didRead(message: Message.Message)(implicit sender: ActorRef) =
       actorRef ! message
-    def doWrite(message: Message.Shot)(implicit sender: ActorRef) =
+    def doWrite(message: Message.Message)(implicit sender: ActorRef) =
       actorRef ! DoWrite(message)
   }
 

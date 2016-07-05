@@ -141,6 +141,35 @@ object Message {
         expiration = expirationR.value
       } yield DecodeResult(Shot(from, to, text, expiration), expirationR.remainder)
   }
+
+  implicit val multiShotCodec = new Codec[MultiShot] {
+    val textCodec = variableSizeBytes(int32L, bytes)
+    val expirationCodec = long(64)
+    val toFieldCodec = listOfN(int32L, identifierCodec)
+
+    override def encode(value: MultiShot): Attempt[BitVector] =
+      for {
+        fromBytes <- identifierCodec.encode(value.from)
+        toBytes <- toFieldCodec.encode(value.to.toList)
+        textBytes <- textCodec.encode(ByteVector(value.text))
+        expirationBytes <- expirationCodec.encode(value.expiration)
+      } yield fromBytes ++ toBytes ++ textBytes ++ expirationBytes
+
+    override def sizeBound: SizeBound = identifierCodec.sizeBound + toFieldCodec.sizeBound + textCodec.sizeBound + expirationCodec.sizeBound
+
+    override def decode(bits: BitVector): Attempt[DecodeResult[MultiShot]] =
+      for {
+        fromR <- identifierCodec.decode(bits)
+        from = fromR.value
+        toR <- toFieldCodec.decode(fromR.remainder)
+        to = toR.value.toSet
+        textR <- textCodec.decode(toR.remainder)
+        text = textR.value.toArray
+        expirationR <- expirationCodec.decode(textR.remainder)
+        expiration = expirationR.value
+      } yield DecodeResult(MultiShot(from, to, text, expiration), expirationR.remainder)
+  }
+
   implicit val codec: Codec[Message] =
     discriminated[Message].by(byte)
       .typecase(1, implicitly[Codec[Hello]])
@@ -148,6 +177,7 @@ object Message {
       .typecase(3, implicitly[Codec[Pex]])
       .typecase(4, implicitly[Codec[PexResponse]])
       .typecase(5, implicitly[Codec[Shot]])
+      .typecase(6, implicitly[Codec[MultiShot]])
 
   def encode[A <: Message](message: A): Array[Byte] = codec.encode(message).toOption match {
     case Some(bitVector) => bitVector.toByteArray
@@ -171,4 +201,6 @@ object Message {
   case class PexResponse(ids: Set[Identifier]) extends Message
 
   case class Shot(from: Identifier, to: Identifier, text: Array[Byte], expiration: Long) extends Message
+
+  case class MultiShot(from: Identifier, to: Set[Identifier], text: Array[Byte], expiration: Long) extends Message
 }
