@@ -40,5 +40,5 @@ object Client {
     def didClose()(implicit context: ActorContext) = actorRef ! DidClose()
   }
 
-  trait Behavior extends EventHandler[Client.Event]
+  abstract class Behavior extends EventHandler[Client.Event]
 }

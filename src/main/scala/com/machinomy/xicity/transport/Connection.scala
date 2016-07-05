@@ -45,5 +45,5 @@ object Connection {
     def didRead(bytes: Array[Byte])(implicit sender: ActorRef) = actorRef ! DidRead(bytes)
   }
 
-  trait Behavior extends EventHandler[Connection.Event]
+  abstract class Behavior extends EventHandler[Connection.Event]
 }
