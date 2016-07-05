@@ -25,31 +25,32 @@ class Node(identifier: Identifier) extends Actor with ActorLogging {
       log.info(s"Getting identifiers except $exceptEndpoint")
       val identifiers = routingTable.identifiers(exceptEndpoint) + identifier
       sender ! identifiers
-    case Node.DidReceive(message) =>
-      log.info(s"Received message $message")
-      if (message.expiration > DateTime.now.getMillis / 1000) {
-        if (message.to == identifier) {
-          receiveToSelf(message)
+    case Node.DidReceiveShot(from: Identifier, to: Identifier, text: Array[Byte], expiration: Long) =>
+      log.info(s"Received message: $from -> $to")
+      if (expiration > DateTime.now.getMillis / 1000) {
+        if (to == identifier) {
+          receiveToSelf(from, to, text, expiration)
         } else {
-          relay(message)
+          relay(from, to, text, expiration)
         }
       } else {
-        log.info(s"Message $message is expired")
+        log.info(s"Message $from -> $to is expired")
       }
   }
 
-  def relay(message: Message.Shot): Unit = {
-    log.info(s"Relaying Shot from ${message.from} to ${message.to}")
+  def relay(from: Identifier, to: Identifier, text: Array[Byte], expiration: Long): Unit = {
+    log.info(s"Relaying Shot from $from to $to")
     for {
-      endpoint <- routingTable.closestEndpoints(message.to, identifier)
+      endpoint <- routingTable.closestEndpoints(to, identifier)
       connectionBehavior <- runningConnectionBehaviors.get(endpoint)
     } {
       log.info(s"Sending Shot to $endpoint")
-      connectionBehavior.doWrite(message)
+      connectionBehavior.doWrite(Message.Shot(from, to, text, expiration))
     }
   }
 
-  def receiveToSelf(message: Message.Shot): Unit = {
+  def receiveToSelf(from: Identifier, to: Identifier, text: Array[Byte], expiration: Long): Unit = {
+    val message = Message.Shot(from, to, text, expiration)
     log.info(s"RECEIVED $message")
   }
 }
@@ -59,7 +60,7 @@ object Node {
   case class DidAddConnection(endpoint: Endpoint, connectionBehavior: Connection.BehaviorWrap) extends Event
   case class DidRemoveConnection(endpoint: Endpoint) extends Event
   case class DidPex(endpoint: Endpoint, identifiers: Set[Identifier]) extends Event
-  case class DidReceive(message: Message.Shot) extends Command
+  case class DidReceiveShot(from: Identifier, to: Identifier, text: Array[Byte], expiration: Long) extends Command
 
   sealed trait Command extends Event
   case class GetIdentifiers(except: Endpoint) extends Command
@@ -75,8 +76,8 @@ object Node {
       actorRef ! DidPex(endpoint, identifiers)
     def getIdentifiers(except: Endpoint)(implicit context: ActorContext): Future[Set[Identifier]] =
       (actorRef ? GetIdentifiers(except: Endpoint)).mapTo[Set[Identifier]]
-    def didReceive(message: Message.Shot)(implicit context: ActorContext): Unit =
-      actorRef ! DidReceive(message)
+    def didReceive(from: Identifier, to: Identifier, text: Array[Byte], expiration: Long)(implicit context: ActorContext): Unit =
+      actorRef ! DidReceiveShot(from, to, text, expiration)
   }
 
   def props(identifier: Identifier) = Props(classOf[Node], identifier)
