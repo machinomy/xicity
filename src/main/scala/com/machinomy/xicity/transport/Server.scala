@@ -5,8 +5,7 @@ import java.net.InetSocketAddress
 import akka.actor._
 import akka.io.{IO, Tcp}
 
-class Server(local: Address, initialBehavior: Server.Behavior) extends Actor with ActorLogging {
-  var behavior = initialBehavior
+class Server(local: Address, behavior: Server.BehaviorWrap) extends Actor with ActorLogging {
 
   override def preStart(): Unit = {
     implicit val actorSystem = context.system
@@ -17,16 +16,16 @@ class Server(local: Address, initialBehavior: Server.Behavior) extends Actor wit
   override def receive: Receive = {
     case Tcp.Bound(localAddress) =>
       log.info(s"Bound to $localAddress")
-      behavior = behavior.didBound(localAddress)
+      behavior.didBound(localAddress)
     case Tcp.Connected(remoteAddress, localAddress) =>
       log.info(s"Connected to $localAddress")
-      behavior = behavior.didConnect(remoteAddress, sender)
+      behavior.didConnect(remoteAddress, sender)
     case Tcp.CommandFailed(cmd: Tcp.Bind) =>
       log.error(s"Can not bind to ${cmd.localAddress}")
       context.stop(self)
     case Tcp.ErrorClosed(cause) =>
       log.error(s"Closed connection on error: $cause")
-      behavior = behavior.didDisconnect()
+      behavior.didDisconnect()
       context.stop(self)
   }
 
@@ -37,12 +36,24 @@ class Server(local: Address, initialBehavior: Server.Behavior) extends Actor wit
 }
 
 object Server {
-  def props(local: Address, behavior: Behavior) = Props(classOf[Server], local, behavior)
+  sealed trait Event
+  case class DidBound(localAddress: InetSocketAddress) extends Event
+  case class DidConnect(remoteAddress: InetSocketAddress, tcpActorRef: ActorRef) extends Event
+  case class DidDisconnect() extends Event
+  case class DidClose() extends Event
 
-  trait Behavior {
-    def didBound(localAddress: InetSocketAddress): Behavior
-    def didConnect(remoteAddress: InetSocketAddress, wire: ActorRef)(implicit context: ActorContext): Behavior
-    def didClose(): Behavior
-    def didDisconnect(): Behavior
+  def props(local: Address, behavior: BehaviorWrap) = Props(classOf[Server], local, behavior)
+
+  case class BehaviorWrap(actorRef: ActorRef) extends ActorWrap {
+    def didBound(localAddress: InetSocketAddress)(implicit context: ActorContext) =
+      actorRef ! DidBound(localAddress)
+    def didConnect(remoteAddress: InetSocketAddress, tcpActorRef: ActorRef)(implicit context: ActorContext) =
+      actorRef ! DidConnect(remoteAddress, tcpActorRef)
+    def didDisconnect()(implicit context: ActorContext) =
+      actorRef ! DidDisconnect()
+    def didClose()(implicit context: ActorContext) =
+      actorRef ! DidClose()
   }
+
+  abstract class Behavior extends EventHandler[Event]
 }
