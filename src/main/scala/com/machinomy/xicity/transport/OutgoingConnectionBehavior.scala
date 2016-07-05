@@ -23,6 +23,7 @@ class OutgoingConnectionBehavior extends Actor with ActorLogging {
     case Connection.DidClose() =>
       log.info(s"Closed")
       context.stop(self)
+    case something => throw new IllegalArgumentException(s"Not expected anything, got $something")
   }
 
   def expectHelloResponse(nonce: Int, endpoint: Endpoint): Receive = {
