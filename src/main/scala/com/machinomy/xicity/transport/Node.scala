@@ -7,9 +7,10 @@ import com.github.nscala_time.time.Imports._
 
 import scala.concurrent.Future
 
-class Node(identifier: Identifier) extends Actor with ActorLogging {
+class Node(identifier: Identifier, peerOpt: Option[ActorRef]) extends Actor with ActorLogging {
   var routingTable: RoutingTable = RoutingTable.empty
   var runningConnectionBehaviors: Map[Endpoint, Connection.BehaviorWrap] = Map.empty
+  var isReady: Boolean = false
 
   override def receive: Receive = {
     case Node.DidAddConnection(endpoint, connectionBehavior) =>
@@ -21,6 +22,10 @@ class Node(identifier: Identifier) extends Actor with ActorLogging {
     case Node.DidPex(endpoint, identifiers) =>
       log.info(s"DidPex: $endpoint, $identifiers")
       routingTable += (endpoint -> identifiers)
+      if (routingTable.mapping.nonEmpty && !isReady) {
+        for (peer <- peerOpt) peer ! Node.IsReady()
+        isReady = true
+      }
     case Node.GetIdentifiers(exceptEndpoint) =>
       log.info(s"Getting identifiers except $exceptEndpoint")
       val identifiers = routingTable.identifiers(exceptEndpoint) + identifier
@@ -51,7 +56,8 @@ class Node(identifier: Identifier) extends Actor with ActorLogging {
 
   def receiveToSelf(from: Identifier, to: Identifier, text: Array[Byte], expiration: Long): Unit = {
     val message = Message.Shot(from, to, text, expiration)
-    log.info(s"RECEIVED $message")
+    log.info(s"Received $message to myself")
+    for (peer <- peerOpt) peer ! message
   }
 }
 
@@ -64,6 +70,9 @@ object Node {
 
   sealed trait Command extends Event
   case class GetIdentifiers(except: Endpoint) extends Command
+
+  sealed trait Callback extends Event
+  case class IsReady() extends Callback
 
   case class Wrap(actorRef: ActorRef, parameters: Parameters) extends ActorWrap {
     implicit val timeout = parameters.timeout
@@ -80,5 +89,7 @@ object Node {
       actorRef ! DidReceiveShot(from, to, text, expiration)
   }
 
-  def props(identifier: Identifier) = Props(classOf[Node], identifier)
+  def props(identifier: Identifier, peer: ActorRef) = Props(classOf[Node], identifier, Some(peer))
+
+  def props(identifier: Identifier) = Props(classOf[Node], identifier, None)
 }
