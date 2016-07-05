@@ -14,7 +14,7 @@ class ServerBehavior extends Server.Behavior {
     case Server.DidConnect(remoteAddress, tcpActorRef) =>
       log.info(s"Received connection from $remoteAddress")
       val endpoint = Endpoint(Address(remoteAddress), Wire(tcpActorRef))
-      val handler = handler(endpoint)
+      val handler = newHandler(endpoint)
       tcpActorRef ! Tcp.Register(handler)
       log.info(s"Server bound to $localAddressOpt got connection from $remoteAddress")
     case Server.DidDisconnect() =>
@@ -27,7 +27,7 @@ class ServerBehavior extends Server.Behavior {
       context.stop(self)
   }
 
-  def handler(endpoint: Endpoint) = context.actorOf(Connection.props(endpoint, connectionBehavior()))
+  def newHandler(endpoint: Endpoint) = context.actorOf(Connection.props(endpoint, connectionBehavior()))
 
   def connectionBehavior() = Connection.BehaviorWrap(context.actorOf(IncomingConnectionBehavior.props()))
 }
