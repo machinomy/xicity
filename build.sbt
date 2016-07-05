@@ -1,7 +1,5 @@
 name := "xicity"
 
-version := "0.0.1"
-
 scalaVersion := "2.11.8"
 
 organization := "com.machinomy"
@@ -31,8 +29,8 @@ libraryDependencies ++= Seq(
 
 publishTo := {
   if (isSnapshot.value)
-    Some("Machinomy" at "http://machinomy.com:8081/artifactory/libs-release-local/")
-  else
     Some("Machinomy" at "http://machinomy.com:8081/artifactory/libs-snapshot-local/;build.timestamp=" + new java.util.Date().getTime)
+  else
+    Some("Machinomy" at "http://machinomy.com:8081/artifactory/libs-release-local/")
 }
 credentials += Credentials(new File("credentials.properties"))
