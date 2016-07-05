@@ -4,7 +4,7 @@ import akka.actor.{Actor, ActorLogging, Props}
 
 import scala.util.Random
 
-class OutgoingConnectionBehavior(node: Node.Wrap) extends Actor with ActorLogging {
+class OutgoingConnectionBehavior(node: Node.Wrap, parameters: Parameters) extends Actor with ActorLogging {
   var endpointOpt: Option[Endpoint] = None
 
   override def receive: Receive = expectConnect orElse expectFailure
@@ -51,5 +51,5 @@ class OutgoingConnectionBehavior(node: Node.Wrap) extends Actor with ActorLoggin
 }
 
 object OutgoingConnectionBehavior {
-  def props(node: Node.Wrap) = Props(classOf[OutgoingConnectionBehavior], node)
+  def props(node: Node.Wrap, parameters: Parameters) = Props(classOf[OutgoingConnectionBehavior], node, parameters)
 }

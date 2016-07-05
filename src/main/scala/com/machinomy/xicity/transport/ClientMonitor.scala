@@ -4,7 +4,10 @@ import akka.actor.{Actor, ActorContext, ActorLogging, Props}
 
 import scala.util.Random
 
-class ClientMonitor(seeds: Set[Address], threshold: Byte, node: Node.Wrap) extends Actor with ActorLogging {
+class ClientMonitor(node: Node.Wrap, parameters: Parameters) extends Actor with ActorLogging {
+  val seeds = parameters.seeds
+  val threshold = parameters.threshold
+
   assert(threshold >= 0)
 
   override def preStart(): Unit = {
@@ -25,9 +28,9 @@ class ClientMonitor(seeds: Set[Address], threshold: Byte, node: Node.Wrap) exten
     }
 
   def clientBehavior()(implicit context: ActorContext) =
-    Client.BehaviorWrap(context.actorOf(ClientBehavior.props(node)))
+    Client.BehaviorWrap(context.actorOf(ClientBehavior.props(node, parameters)))
 }
 
 object ClientMonitor {
-  def props(seeds: Set[Address], threshold: Byte, node: Node.Wrap) = Props(classOf[ClientMonitor], seeds, threshold, node)
+  def props(node: Node.Wrap, parameters: Parameters) = Props(classOf[ClientMonitor], node, parameters)
 }

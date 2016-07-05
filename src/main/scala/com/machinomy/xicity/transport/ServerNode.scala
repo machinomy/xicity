@@ -9,7 +9,7 @@ class ServerNode(identifier: Identifier, node: Node.Wrap, parameters: Parameters
 
   override def preStart(): Unit = {
     val selfWrap = Node.Wrap(self)
-    val serverBehaviorActor = context.actorOf(ServerBehavior.props(selfWrap))
+    val serverBehaviorActor = context.actorOf(ServerBehavior.props(selfWrap, parameters))
     serverBehaviorActorOpt = Some(serverBehaviorActor)
     val serverBehaviorWrap = Server.BehaviorWrap(serverBehaviorActor)
     val serverActor = context.actorOf(Server.props(parameters.serverAddress, serverBehaviorWrap))

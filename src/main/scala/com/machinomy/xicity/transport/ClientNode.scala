@@ -8,7 +8,7 @@ class ClientNode(identifier: Identifier, node: Node.Wrap, parameters: Parameters
 
   override def preStart(): Unit = {
     val selfWrap = Node.Wrap(self)
-    val clientMonitorProps = ClientMonitor.props(parameters.seeds, parameters.threshold, selfWrap)
+    val clientMonitorProps = ClientMonitor.props(selfWrap, parameters)
     val clientMonitorActor = context.actorOf(clientMonitorProps)
     clientMonitorActorOpt = Some(clientMonitorActor)
   }
