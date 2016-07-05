@@ -1,5 +1,7 @@
 package com.machinomy.xicity.transport
 
+import akka.actor.Props
+
 class IncomingConnectionBehavior extends Connection.Behavior {
   var endpointOpt: Option[Endpoint] = None
 
@@ -16,4 +18,8 @@ class IncomingConnectionBehavior extends Connection.Behavior {
     case Connection.DidRead(bytes) =>
       log.info(s"Received $bytes")
   }
+}
+
+object IncomingConnectionBehavior {
+  def props(): Props = Props(classOf[IncomingConnectionBehavior])
 }
