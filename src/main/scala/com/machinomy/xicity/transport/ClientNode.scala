@@ -1,7 +1,6 @@
 package com.machinomy.xicity.transport
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
-import com.machinomy.xicity.Identifier
 
 class ClientNode(node: Node.Wrap, parameters: Parameters) extends Actor with ActorLogging {
   var clientMonitorActorOpt: Option[ActorRef] = None
@@ -13,6 +12,8 @@ class ClientNode(node: Node.Wrap, parameters: Parameters) extends Actor with Act
   }
 
   override def receive: Receive = {
+    case message: Message.Shot =>
+      node.didReceive(message)
     case something => throw new IllegalArgumentException(s"Got unexpected $something")
   }
 }

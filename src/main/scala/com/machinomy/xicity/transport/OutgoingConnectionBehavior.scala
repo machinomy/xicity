@@ -63,6 +63,10 @@ class OutgoingConnectionBehavior(node: Node.Wrap, parameters: Parameters) extend
       for (endpoint <- endpointOpt) {
         node.didPex(endpoint, identifiers)
       }
+    case Connection.DoWrite(message) =>
+      for (endpoint <- endpointOpt) {
+        endpoint.write(message)
+      }
     case something => log.error(s"Got $something")
   }
 

@@ -46,7 +46,13 @@ class IncomingConnectionBehavior(node: Node.Wrap, parameters: Parameters) extend
       for (endpoint <- endpointOpt) {
         node.didPex(endpoint, identifiers)
       }
-    case something => log.error(s"Got $something")
+    case Connection.DoWrite(message) =>
+      for (endpoint <- endpointOpt) {
+        endpoint.write(message)
+      }
+    case message: Message.Shot =>
+      node.didReceive(message)
+    case something => throw new IllegalArgumentException(s"Not expected anything, got $something")
   }
 
   override def postStop(): Unit =

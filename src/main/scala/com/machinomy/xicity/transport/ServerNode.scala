@@ -15,6 +15,8 @@ class ServerNode(node: Node.Wrap, parameters: Parameters) extends Actor with Act
   }
 
   override def receive: Receive = {
+    case message: Message.Shot =>
+      node.didReceive(message)
     case something => throw new IllegalArgumentException(s"Got unexpected $something")
   }
 }

@@ -20,8 +20,8 @@ object Parameters {
     override def seeds: Set[Address] = Set(Address("localhost", port))
     override def threshold: Byte = 8
     override def serverAddress: Address = Address("0.0.0.0", port)
-    override def tickInterval: FiniteDuration = 30.seconds
-    override def tickInitialDelay: FiniteDuration = 2.seconds
+    override def tickInterval: FiniteDuration = 3.seconds
+    override def tickInitialDelay: FiniteDuration = 1.seconds
     override def timeout: Timeout = Timeout(10.seconds)
   }
 }
