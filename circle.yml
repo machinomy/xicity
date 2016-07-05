@@ -1,0 +1,6 @@
+deployment:
+  production:
+   branch: master
+   commands:
+     - echo $IVY_CREDENTIALS > credentials.properties
+     - sbt publish
