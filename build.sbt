@@ -1,6 +1,8 @@
-name := "xicity"
+import sbtrelease.ReleaseStateTransformations._
+import sbtrelease.ReleasePlugin.autoImport.ReleaseKeys._
+import sbtrelease.Version
 
-version := "0.1"
+name := "xicity"
 
 scalaVersion := "2.11.8"
 
@@ -28,3 +30,39 @@ libraryDependencies ++= Seq(
   "com.lihaoyi" % "upickle_2.11" % "0.4.0",
   "com.jsuereth" %% "scala-arm" % "1.4"
 )
+
+def doIfNotSnapshot(step: ReleaseStep) = {
+  ReleaseStep(
+    action = st => {
+      if (!st.get(versions).getOrElse((None, None))._1.toString.endsWith("-SNAPSHOT")) {
+        step.action(st)
+      } else {
+        st
+      }
+    },
+    check = step.check,
+    enableCrossBuild = step.enableCrossBuild
+  )
+}
+
+releaseProcess := Seq[ReleaseStep](
+  checkSnapshotDependencies,
+  inquireVersions,
+  runClean,
+  runTest,
+  doIfNotSnapshot(setReleaseVersion),
+  doIfNotSnapshot(commitReleaseVersion),
+  doIfNotSnapshot(tagRelease),
+  publishArtifacts,
+  doIfNotSnapshot(setNextVersion),
+  doIfNotSnapshot(commitNextVersion),
+  doIfNotSnapshot(pushChanges)
+)
+
+publishTo := {
+  if (isSnapshot.value)
+    Some("Machinomy" at "http://machinomy.com:8081/artifactory/libs-snapshot-local;build.timestamp=" + new java.util.Date().getTime)
+  else
+    Some("Machinomy" at "http://machinomy.com:8081/artifactory/libs-release-local/")
+}
+credentials += Credentials(new File("credentials.properties"))
