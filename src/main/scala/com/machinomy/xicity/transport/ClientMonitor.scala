@@ -1,18 +1,17 @@
 package com.machinomy.xicity.transport
 
-import akka.actor.{Actor, ActorContext, Props}
+import akka.actor.{Actor, ActorContext, ActorLogging, Props}
 
-import scala.annotation.tailrec
 import scala.util.Random
 
-class ClientMonitor(seeds: Set[Address], threshold: Byte, initialBehavior: ClientMonitor.Behavior) extends Actor {
+class ClientMonitor(seeds: Set[Address], threshold: Byte) extends Actor with ActorLogging {
   assert(threshold >= 0)
 
-  var behavior = initialBehavior
-
   override def preStart(): Unit = {
-    behavior = addClients(selectSeeds(threshold), behavior)
+    log.info(s"Started ClientMonitor")
+    addClients(selectSeeds(threshold))
   }
+
 
   override def receive = {
     case something => throw new IllegalArgumentException(s"Not planned to receive anything, got: $something")
@@ -20,19 +19,16 @@ class ClientMonitor(seeds: Set[Address], threshold: Byte, initialBehavior: Clien
 
   def selectSeeds(n: Byte): Set[Address] = Random.shuffle(seeds).take(n)
 
-  @tailrec
-  final def addClients(addresses: Set[Address], behavior: ClientMonitor.Behavior): ClientMonitor.Behavior =
-    if (addresses.isEmpty) {
-      behavior
-    } else {
-      addClients(addresses.tail, behavior.addClient(addresses.head))
+  def addClients(addresses: Set[Address]): Unit =
+    for (address <- addresses) {
+      log.info(s"Starting client for $addresses...")
+      context.actorOf(Client.props(address, clientBehavior))
     }
+
+  def clientBehavior()(implicit context: ActorContext) =
+    Client.BehaviorWrap(context.actorOf(ClientBehavior.props()))
 }
 
 object ClientMonitor {
-  trait Behavior {
-    def addClient(address: Address)(implicit context: ActorContext): Behavior
-  }
-
-  def props(seeds: Set[Address], threshold: Byte, behavior: Behavior) = Props(classOf[ClientMonitor], seeds, threshold, behavior)
+  def props(seeds: Set[Address], threshold: Byte) = Props(classOf[ClientMonitor], seeds, threshold)
 }

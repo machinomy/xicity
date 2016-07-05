@@ -18,10 +18,9 @@ object DefaultBehavior {
 
     override def start()(implicit context: ActorContext): Behavior = clientMonitorActorOpt match {
       case None =>
-        val clientMonitorBehavior = ClientMonitorBehavior(this)
         val seeds = parameters.seeds
         val threshold = parameters.threshold
-        val clientMonitorActor = context.actorOf(ClientMonitor.props(seeds, threshold, clientMonitorBehavior))
+        val clientMonitorActor = context.actorOf(ClientMonitor.props(seeds, threshold))
         copy(clientMonitorActorOpt = Some(clientMonitorActor), selfActorOpt = Some(context.self))
       case Some(actorRef) =>
         this
@@ -69,19 +68,5 @@ object DefaultBehavior {
 
     def connectionBehavior()(implicit context: ActorContext) =
       Connection.BehaviorWrap(context.actorOf(IncomingConnectionBehavior.props()))
-  }
-
-  case class ClientMonitorBehavior(nodeBehavior: NodeActor.Behavior, clients: Map[Address, ActorRef] = Map.empty)
-    extends ClientMonitor.Behavior
-       with LazyLogging {
-
-    override def addClient(address: Address)(implicit context: ActorContext) = {
-      val actor = context.actorOf(Client.props(address, clientActorBehavior))
-      logger.info(s"Adding client connected to $address")
-      copy(clients = clients.updated(address, actor))
-    }
-
-    def clientActorBehavior()(implicit context: ActorContext) =
-      Client.BehaviorWrap(context.actorOf(ClientBehavior.props()))
   }
 }
