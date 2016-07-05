@@ -81,41 +81,7 @@ object DefaultBehavior {
       copy(clients = clients.updated(address, actor))
     }
 
-    def clientActorBehavior = ClientActorBehavior(nodeBehavior)
-  }
-
-
-  case class ClientActorBehavior(nodeBehavior: NodeActor.Behavior, endpointOpt: Option[Endpoint] = None)
-    extends Client.Behavior
-       with LazyLogging {
-
-    override def didConnect(endpoint: Endpoint,
-                            remoteAddress: InetSocketAddress,
-                            localAddress: InetSocketAddress)(implicit context: ActorContext) = {
-      logger.info(s"Connected to $endpoint via $remoteAddress on $localAddress")
-      endpoint.wire.tell(Tcp.Register(newHandler(endpoint)), context.self)
-      nodeBehavior.didOutgoingConnection(endpoint)
-      copy(endpointOpt = Some(endpoint))
-    }
-
-    override def didDisconnect() = {
-      for (endpoint <- endpointOpt) {
-        logger.info(s"Got disconnected from $endpoint")
-      }
-      this
-    }
-
-    override def didClose() = {
-      for (endpoint <- endpointOpt) {
-        logger.info(s"Closing connection to $endpoint")
-      }
-      this
-    }
-
-    def newHandler(endpoint: Endpoint)(implicit context: ActorContext) =
-      context.actorOf(Connection.props(endpoint, connectionBehavior))
-
-    def connectionBehavior()(implicit context: ActorContext) =
-      Connection.BehaviorWrap(context.actorOf(OutgoingConnectionBehavior.props()))
+    def clientActorBehavior()(implicit context: ActorContext) =
+      Client.BehaviorWrap(context.actorOf(ClientBehavior.props()))
   }
 }
