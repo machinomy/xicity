@@ -36,8 +36,9 @@ def doIfNotSnapshot(step: ReleaseStep) = {
     action = st => {
       if (!st.get(versions).getOrElse((None, None))._1.toString.endsWith("-SNAPSHOT")) {
         step.action(st)
+      } else {
+        st
       }
-      st
     },
     check = step.check,
     enableCrossBuild = step.enableCrossBuild
