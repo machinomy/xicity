@@ -21,7 +21,7 @@ object DefaultBehavior {
         val clientMonitorBehavior = ClientMonitorBehavior(this)
         val seeds = parameters.seeds
         val threshold = parameters.threshold
-        val clientMonitorActor = context.actorOf(ClientMonitorActor.props(seeds, threshold, clientMonitorBehavior))
+        val clientMonitorActor = context.actorOf(ClientMonitor.props(seeds, threshold, clientMonitorBehavior))
         copy(clientMonitorActorOpt = Some(clientMonitorActor), selfActorOpt = Some(context.self))
       case Some(actorRef) =>
         this
@@ -72,7 +72,7 @@ object DefaultBehavior {
   }
 
   case class ClientMonitorBehavior(nodeBehavior: NodeActor.Behavior, clients: Map[Address, ActorRef] = Map.empty)
-    extends ClientMonitorActor.Behavior
+    extends ClientMonitor.Behavior
        with LazyLogging {
 
     override def addClient(address: Address)(implicit context: ActorContext) = {

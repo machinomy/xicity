@@ -21,6 +21,6 @@ object ClientMonitorExample {
       override def start()(implicit context: ActorContext): Behavior = this
     }
     val clientMonitorBehavior = DefaultBehavior.ClientMonitorBehavior(nodeBehavior)
-    system.actorOf(ClientMonitorActor.props(Set(serverAddress), 1, clientMonitorBehavior))
+    system.actorOf(ClientMonitor.props(Set(serverAddress), 1, clientMonitorBehavior))
   }
 }
