@@ -3,7 +3,7 @@ package com.machinomy.xicity.transport
 import akka.actor.{Actor, ActorContext, ActorLogging, Props}
 import akka.io.Tcp
 
-class ConnectionActor(endpoint: Endpoint, initialBehavior: ConnectionActor.Behavior) extends Actor with ActorLogging {
+class ConnectionActor(endpoint: Endpoint, initialBehavior: ConnectionActor.ABehavior) extends Actor with ActorLogging {
   var behavior = initialBehavior
 
   override def receive: Receive = {
@@ -25,34 +25,34 @@ class ConnectionActor(endpoint: Endpoint, initialBehavior: ConnectionActor.Behav
 }
 
 object ConnectionActor {
-  def props(endpoint: Endpoint, behavior: Behavior) = Props(classOf[ConnectionActor], endpoint, behavior)
+  def props(endpoint: Endpoint, behavior: ABehavior) = Props(classOf[ConnectionActor], endpoint, behavior)
 
-  trait Behavior {
+  trait ABehavior {
 
     /** Just instantiated a new connection.
       *
       * @param endpoint
       * @return
       */
-    def didConnect(endpoint: Endpoint)(implicit context: ActorContext): Behavior
+    def didConnect(endpoint: Endpoint)(implicit context: ActorContext): ABehavior
 
     /** Connection close is initiated by the peer.
       *
       * @return
       */
-    def didDisconnect()(implicit context: ActorContext): Behavior
+    def didDisconnect()(implicit context: ActorContext): ABehavior
 
     /** Received something from the peer.
       *
       * @param bytes
       * @return
       */
-    def didRead(bytes: Array[Byte])(implicit context: ActorContext): Behavior
+    def didRead(bytes: Array[Byte])(implicit context: ActorContext): ABehavior
 
     /** Connection close is initiated by the code.
       *
       * @return
       */
-    def didClose()(implicit context: ActorContext): Behavior
+    def didClose()(implicit context: ActorContext): ABehavior
   }
 }
