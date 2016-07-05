@@ -15,24 +15,26 @@ class OutgoingConnectionBehavior extends Connection.Behavior {
     case m @ Connection.DidConnect(endpoint, remoteAddress, localAddress) =>
       log.info(s"OutgoingConnectionBehavior: Connected to $endpoint")
       endpointOpt = Some(endpoint)
-      for (messaging <- messagingOpt) messaging ! m
+      forward(m)
     case m @ Connection.DidDisconnect() =>
       log.info(s"Disconnected...")
-      for (messaging <- messagingOpt) messaging ! m
+      forward(m)
       context.stop(self)
     case m @ Connection.DidClose() =>
       log.info(s"Closed...")
-      for (messaging <- messagingOpt) messaging ! m
+      forward(m)
       context.stop(self)
     case Connection.DidRead(bytes) =>
       log.info(s"Received $bytes")
       Message.decode(bytes) match {
         case Some(message) =>
-          for (messaging <- messagingOpt) messaging ! message
+          forward(message)
         case None =>
           log.error(s"Received ${bytes.length} bytes, can not decode")
       }
   }
+
+  def forward(message: Any) = for (messaging <- messagingOpt) messaging ! message
 }
 
 object OutgoingConnectionBehavior {
