@@ -4,7 +4,6 @@ import java.net.InetSocketAddress
 
 import akka.actor._
 import akka.io.{IO, Tcp}
-import io.netty.channel.local.LocalAddress
 
 class Server(local: Address, behavior: Server.BehaviorWrap) extends Actor with ActorLogging {
 

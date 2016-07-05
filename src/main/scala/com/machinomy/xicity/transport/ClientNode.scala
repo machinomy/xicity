@@ -13,10 +13,10 @@ class ClientNode(node: Node.Wrap, parameters: Parameters) extends Actor with Act
 
   override def receive: Receive = {
     case message: Message.Shot =>
-      node.didReceive(message.from, message.to, message.text, message.expiration)
+      node.didReceive(message.from, message.to, message.protocol, message.text, message.expiration)
     case message: Message.MultiShot =>
       for (identifier <- message.to) {
-        node.didReceive(message.from, identifier, message.text, message.expiration)
+        node.didReceive(message.from, identifier, message.protocol, message.text, message.expiration)
       }
     case something => throw new IllegalArgumentException(s"Got unexpected $something")
   }

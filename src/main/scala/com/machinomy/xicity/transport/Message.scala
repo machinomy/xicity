@@ -122,12 +122,13 @@ object Message {
       for {
         fromBytes <- identifierCodec.encode(value.from)
         toBytes <- identifierCodec.encode(value.to)
+        protocolBytes <- int64L.encode(value.protocol)
         textBytes <- textCodec.encode(ByteVector(value.text))
         expirationBytes <- expirationCodec.encode(value.expiration)
-      } yield fromBytes ++ toBytes ++ textBytes ++ expirationBytes
+      } yield fromBytes ++ toBytes ++ protocolBytes ++ textBytes ++ expirationBytes
 
     override def sizeBound: SizeBound =
-      identifierCodec.sizeBound + identifierCodec.sizeBound + textCodec.sizeBound + expirationCodec.sizeBound
+      identifierCodec.sizeBound + identifierCodec.sizeBound + int64L.sizeBound + textCodec.sizeBound + expirationCodec.sizeBound
 
     override def decode(bits: BitVector): Attempt[DecodeResult[Shot]] =
       for {
@@ -135,11 +136,13 @@ object Message {
         from = fromR.value
         toR <- identifierCodec.decode(fromR.remainder)
         to = toR.value
+        protocolR <- int64L.decode(toR.remainder)
+        protocol = protocolR.value
         textR <- textCodec.decode(toR.remainder)
         text = textR.value.toArray
         expirationR <- expirationCodec.decode(textR.remainder)
         expiration = expirationR.value
-      } yield DecodeResult(Shot(from, to, text, expiration), expirationR.remainder)
+      } yield DecodeResult(Shot(from, to, protocol, text, expiration), expirationR.remainder)
   }
 
   implicit val multiShotCodec = new Codec[MultiShot] {
@@ -151,9 +154,10 @@ object Message {
       for {
         fromBytes <- identifierCodec.encode(value.from)
         toBytes <- toFieldCodec.encode(value.to.toList)
+        protocolBytes <- int64L.encode(value.protocol)
         textBytes <- textCodec.encode(ByteVector(value.text))
         expirationBytes <- expirationCodec.encode(value.expiration)
-      } yield fromBytes ++ toBytes ++ textBytes ++ expirationBytes
+      } yield fromBytes ++ toBytes ++ protocolBytes ++ textBytes ++ expirationBytes
 
     override def sizeBound: SizeBound = identifierCodec.sizeBound + toFieldCodec.sizeBound + textCodec.sizeBound + expirationCodec.sizeBound
 
@@ -163,11 +167,13 @@ object Message {
         from = fromR.value
         toR <- toFieldCodec.decode(fromR.remainder)
         to = toR.value.toSet
+        protocolR <- int64L.decode(toR.remainder)
+        protocol = protocolR.value
         textR <- textCodec.decode(toR.remainder)
         text = textR.value.toArray
         expirationR <- expirationCodec.decode(textR.remainder)
         expiration = expirationR.value
-      } yield DecodeResult(MultiShot(from, to, text, expiration), expirationR.remainder)
+      } yield DecodeResult(MultiShot(from, to, protocol, text, expiration), expirationR.remainder)
   }
 
   implicit val codec: Codec[Message] =
@@ -200,7 +206,7 @@ object Message {
 
   case class PexResponse(ids: Set[Identifier]) extends Message
 
-  case class Shot(from: Identifier, to: Identifier, text: Array[Byte], expiration: Long) extends Message
+  case class Shot(from: Identifier, to: Identifier, protocol: Long, text: Array[Byte], expiration: Long) extends Message
 
-  case class MultiShot(from: Identifier, to: Set[Identifier], text: Array[Byte], expiration: Long) extends Message
+  case class MultiShot(from: Identifier, to: Set[Identifier], protocol: Long, text: Array[Byte], expiration: Long) extends Message
 }
