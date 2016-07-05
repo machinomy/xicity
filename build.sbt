@@ -1,3 +1,5 @@
+import sbtrelease.ReleaseStateTransformations._
+
 name := "xicity"
 
 scalaVersion := "2.11.8"
@@ -26,6 +28,32 @@ libraryDependencies ++= Seq(
   "com.lihaoyi" % "upickle_2.11" % "0.4.0",
   "com.jsuereth" %% "scala-arm" % "1.4"
 )
+
+releaseProcess := {
+  if (isSnapshot.value) {
+    Seq(
+      checkSnapshotDependencies,
+      inquireVersions,
+      runClean,
+      runTest,
+      publishArtifacts
+    )
+  } else {
+    Seq(
+      checkSnapshotDependencies,
+      inquireVersions,
+      runClean,
+      runTest,
+      setReleaseVersion,
+      commitReleaseVersion,
+      tagRelease,
+      publishArtifacts,
+      setNextVersion,
+      commitNextVersion,
+      pushChanges
+    )
+  }
+}
 
 publishTo := {
   if (isSnapshot.value)
