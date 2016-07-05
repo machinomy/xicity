@@ -7,8 +7,7 @@ scalaVersion := "2.11.8"
 organization := "com.machinomy"
 
 resolvers ++= Seq(
-  "tomp2p.net" at "http://tomp2p.net/dev/mvn/",
-  "Machinomy" at "http://machinomy.com:8081/artifactory/libs-release-local/"
+  "tomp2p.net" at "http://tomp2p.net/dev/mvn/"
 )
 
 libraryDependencies ++= Seq(
