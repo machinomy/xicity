@@ -25,6 +25,12 @@ class ConnectionActor(endpoint: Endpoint, initialBehavior: ConnectionActor.ABeha
 }
 
 object ConnectionActor {
+  sealed trait Event
+  case class DidConnect(endpoint: Endpoint) extends Event
+  case class DidDisconnect() extends Event
+  case class DidRead(bytes: Array[Byte]) extends Event
+  case class DidClose() extends Event
+
   def props(endpoint: Endpoint, behavior: ABehavior) = Props(classOf[ConnectionActor], endpoint, behavior)
 
   trait ABehavior {
