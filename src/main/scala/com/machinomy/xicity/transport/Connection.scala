@@ -45,16 +45,5 @@ object Connection {
     def didRead(bytes: Array[Byte])(implicit sender: ActorRef) = actorRef ! DidRead(bytes)
   }
 
-  trait Behavior extends Actor with ActorLogging {
-    type Handle = PartialFunction[Event, Unit]
-
-    override def receive: Receive = {
-      case something => something match {
-        case event: Connection.Event => handle(event)
-        case anything => throw new IllegalArgumentException(s"Received unexpected $anything")
-      }
-    }
-
-    def handle: Handle
-  }
+  trait Behavior extends EventHandler[Connection.Event]
 }
