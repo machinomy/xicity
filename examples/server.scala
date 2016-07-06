@@ -16,7 +16,7 @@ class Peer extends Actor with ActorLogging {
   }
 
   override def receive: Receive = {
-    case Node.IsReady() =>
+    case Peer.IsReady() =>
       log.info("NODEISREADY")
     case m: Message.Shot =>
       log.info(s"RECEIVEDSHOT $m")
