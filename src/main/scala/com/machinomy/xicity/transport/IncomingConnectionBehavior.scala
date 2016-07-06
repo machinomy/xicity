@@ -47,6 +47,7 @@ class IncomingConnectionBehavior(node: Node.Wrap, parameters: Parameters) extend
         node.didPex(endpoint, identifiers)
       }
     case Connection.DoWrite(message) =>
+      log.info(s"Writing $message to $endpointOpt")
       for (endpoint <- endpointOpt) {
         endpoint.write(message)
       }
