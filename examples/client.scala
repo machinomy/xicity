@@ -4,7 +4,7 @@ import com.machinomy.xicity._
 import com.machinomy.xicity.transport._
 
 implicit val system = ActorSystem()
-val identifier = Identifier(33)
+val identifier = Identifier(10)
 println(identifier)
 
 
