@@ -67,7 +67,8 @@ class OutgoingConnectionBehavior(node: Node.Wrap, parameters: Parameters) extend
       for (endpoint <- endpointOpt) {
         endpoint.write(message)
       }
-    case something => log.error(s"Got $something")
+    case message: Message.Shot =>
+      node.didReceive(message.from, message.to, message.protocol, message.text, message.expiration)
   }
 
   override def postStop(): Unit =
