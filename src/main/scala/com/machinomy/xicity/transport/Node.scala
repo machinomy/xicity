@@ -45,6 +45,7 @@ class Node(identifier: Identifier, peerOpt: Option[ActorRef]) extends Actor with
 
   def relay(from: Identifier, to: Identifier, protocol: Long, text: Array[Byte], expiration: Long): Unit = {
     log.info(s"Relaying Shot from $from to $to")
+    log.info(s"Endpoint: ${routingTable.closestEndpoints(to, identifier)}")
     for {
       endpoint <- routingTable.closestEndpoints(to, identifier)
       connectionBehavior <- runningConnectionBehaviors.get(endpoint)
