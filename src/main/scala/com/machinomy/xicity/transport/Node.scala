@@ -20,6 +20,8 @@ class Node(identifier: Identifier, peerOpt: Option[ActorRef]) extends Actor with
       log.info(s"Removing connection behavior for $endpoint")
       runningConnectionBehaviors -= endpoint
       routingTable -= endpoint
+      log.info(s"Got routing table: $routingTable")
+      log.info(s"Got runningConnectios: $runningConnectionBehaviors")
     case Node.DidPex(endpoint, identifiers) =>
       //log.info(s"DidPex: $endpoint, $identifiers")
       routingTable += (endpoint -> identifiers)
