@@ -2,8 +2,8 @@ package com.machinomy.xicity.transport
 
 import akka.actor.{Actor, ActorContext, ActorLogging, ActorRef, Props}
 import akka.pattern.ask
-import com.machinomy.xicity.Identifier
 import com.github.nscala_time.time.Imports._
+import com.machinomy.xicity.Identifier
 
 import scala.concurrent.Future
 
@@ -19,6 +19,7 @@ class Node(identifier: Identifier, peerOpt: Option[ActorRef]) extends Actor with
     case Node.DidRemoveConnection(endpoint) =>
       log.info(s"Removing connection behavior for $endpoint")
       runningConnectionBehaviors -= endpoint
+      routingTable -= endpoint
     case Node.DidPex(endpoint, identifiers) =>
       log.info(s"DidPex: $endpoint, $identifiers")
       routingTable += (endpoint -> identifiers)
