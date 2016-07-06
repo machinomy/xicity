@@ -21,18 +21,18 @@ class Node(identifier: Identifier, peerOpt: Option[ActorRef]) extends Actor with
       runningConnectionBehaviors -= endpoint
       routingTable -= endpoint
     case Node.DidPex(endpoint, identifiers) =>
-      log.info(s"DidPex: $endpoint, $identifiers")
+      //log.info(s"DidPex: $endpoint, $identifiers")
       routingTable += (endpoint -> identifiers)
       if (routingTable.mapping.nonEmpty && !isReady) {
         for (peer <- peerOpt) peer ! Node.IsReady()
         isReady = true
       }
     case Node.GetIdentifiers(exceptEndpoint) =>
-      log.info(s"Getting identifiers except $exceptEndpoint")
+      //log.info(s"Getting identifiers except $exceptEndpoint")
       val identifiers = routingTable.identifiers(exceptEndpoint) + identifier
       sender ! identifiers
     case Node.DidReceiveShot(from, to, protocol, text, expiration: Long) =>
-      log.info(s"Received message: $from -> $to")
+      log.info(s"Received message: $from -> $to: ${text.toList}, $expiration")
       if (expiration > DateTime.now.getMillis / 1000) {
         if (to == identifier) {
           receiveToSelf(from, to, protocol, text, expiration)
