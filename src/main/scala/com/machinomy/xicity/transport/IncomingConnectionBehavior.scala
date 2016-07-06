@@ -52,7 +52,6 @@ class IncomingConnectionBehavior(node: Node.Wrap, parameters: Parameters) extend
       }
     case message: Message.Shot =>
       node.didReceive(message.from, message.to, message.protocol, message.text, message.expiration)
-    case something => throw new IllegalArgumentException(s"Not expected anything, got $something")
   }
 
   override def postStop(): Unit =
