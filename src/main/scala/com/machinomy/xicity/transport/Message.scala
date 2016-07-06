@@ -115,9 +115,10 @@ object Message {
         idsList = idsListR.value
       } yield DecodeResult(PexResponse(idsList.toSet), idsListR.remainder)
   }
+  val textCodec = listOfN(int32L, byte)
+
   implicit val shotCodec = new Codec[Shot] {
-    val textCodec = listOfN(int32L, byte)
-    val expirationCodec = long(64)
+    val expirationCodec = int64L
     override def encode(value: Shot): Attempt[BitVector] =
       for {
         fromBytes <- identifierCodec.encode(value.from)
@@ -138,7 +139,7 @@ object Message {
         to = toR.value
         protocolR <- int64L.decode(toR.remainder)
         protocol = protocolR.value
-        textR <- textCodec.decode(toR.remainder)
+        textR <- textCodec.decode(protocolR.remainder)
         text = textR.value.toArray
         expirationR <- expirationCodec.decode(textR.remainder)
         expiration = expirationR.value
