@@ -191,9 +191,7 @@ object Message {
     case None => throw new FailedEncodingError(s"Can not encode ${message.toString}")
   }
 
-  def decode(bytes: Array[Byte]): Option[Message] = codec.decode(BitVector(bytes)).toOption.map { decodeResult =>
-    decodeResult.value
-  }
+  def decode(bytes: Array[Byte]): Option[DecodeResult[Message]] = codec.decode(BitVector(bytes)).toOption
 
   case class FailedEncodingError(message: String) extends Error(message)
 

@@ -6,6 +6,8 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.io.Tcp
 
 class Connection(endpoint: Endpoint, behavior: Connection.BehaviorWrap) extends Actor with ActorLogging {
+  var buffer: Array[Byte] = Array.empty
+
   override def receive: Receive = {
     case Tcp.Connected(remoteAddress, localAddress) =>
       log.info(s"Connected to $endpoint via $remoteAddress from $localAddress")
@@ -23,11 +25,14 @@ class Connection(endpoint: Endpoint, behavior: Connection.BehaviorWrap) extends 
       behavior.didDisconnect()
       context.stop(self)
     case Tcp.Received(byteString) =>
-      Message.decode(byteString.toArray) match {
-        case Some(message) =>
+      Message.decode(buffer ++ byteString.toArray) match {
+        case Some(decodeResult) =>
+          val message = decodeResult.value
           behavior.didRead(message)
+          buffer = decodeResult.remainder.toByteArray
         case None =>
-          log.error(s"Received ${byteString.length} bytes, can not decode")
+          buffer = byteString.toArray
+          log.error(s"Received ${byteString.length} bytes, can not decode yet")
       }
   }
 }
