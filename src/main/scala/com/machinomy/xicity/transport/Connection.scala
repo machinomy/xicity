@@ -32,7 +32,7 @@ class Connection(endpoint: Endpoint, behavior: Connection.BehaviorWrap) extends 
           behavior.didRead(message)
           buffer = decodeResult.remainder.toByteArray
         case None =>
-          buffer = byteString.toArray
+          buffer = b
           log.error(s"Received ${byteString.length} bytes, can not decode yet")
       }
   }
