@@ -32,12 +32,12 @@ class Connection(endpoint: Endpoint, behavior: Connection.BehaviorWrap) extends 
           val message = decodeResult.value
           behavior.didRead(message)
           buffer = decodeResult.remainder.toByteArray
-          println(s"BUFFER: ${buffer.toList}")
           self ! Tcp.Received(ByteString())
         case None =>
           buffer = b
-          println(s"BUFFER: ${buffer.toList}")
-          log.error(s"Received ${byteString.length} bytes, can not decode yet")
+          if (byteString.nonEmpty) {
+            log.error(s"Received ${byteString.length} bytes, can not decode yet")
+          }
       }
   }
 }

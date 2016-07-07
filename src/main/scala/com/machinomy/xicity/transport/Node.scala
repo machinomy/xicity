@@ -29,8 +29,6 @@ class Node(identifier: Identifier, peerOpt: Option[ActorRef]) extends Actor with
         for (peer <- peerOpt) peer ! Node.IsReady()
         isReady = true
       }
-      log.info(s"ROUTING TABLE: $routingTable")
-      log.info(s"REVERSE: ${routingTable.reverseMapping}")
     case Node.GetIdentifiers(exceptEndpoint) =>
       //log.info(s"Getting identifiers except $exceptEndpoint")
       val identifiers = routingTable.identifiers(exceptEndpoint) + identifier
@@ -49,13 +47,13 @@ class Node(identifier: Identifier, peerOpt: Option[ActorRef]) extends Actor with
   }
 
   def relay(from: Identifier, to: Identifier, protocol: Long, text: Array[Byte], expiration: Long): Unit = {
-    log.info(s"Relaying Shot from $from to $to")
-    log.info(s"Endpoint: ${routingTable.closestEndpoints(to, identifier)}")
+    //log.info(s"Relaying Shot from $from to $to")
+    //log.info(s"Endpoint: ${routingTable.closestEndpoints(to, identifier)}")
     for {
       endpoint <- routingTable.closestEndpoints(to, identifier)
       connectionBehavior <- runningConnectionBehaviors.get(endpoint)
     } {
-      log.info(s"Sending Shot to $endpoint")
+      //log.info(s"Sending Shot to $endpoint")
       connectionBehavior.doWrite(Message.Shot(from, to, protocol, text, expiration))
     }
   }
