@@ -34,7 +34,7 @@ class Node(identifier: Identifier, peerOpt: Option[ActorRef]) extends Actor with
       val identifiers = routingTable.identifiers(exceptEndpoint) + identifier
       sender ! identifiers
     case Node.DidReceiveShot(from, to, protocol, text, expiration: Long) =>
-      log.info(s"Received message: $from -> $to: ${text.toList}, $expiration")
+      //log.info(s"Received message: $from -> $to: ${text.toList}, $expiration")
       if (expiration > DateTime.now.getMillis / 1000) {
         if (to == identifier) {
           receiveToSelf(from, to, protocol, text, expiration)
