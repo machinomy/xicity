@@ -29,6 +29,8 @@ class Node(identifier: Identifier, peerOpt: Option[ActorRef]) extends Actor with
         for (peer <- peerOpt) peer ! Node.IsReady()
         isReady = true
       }
+      log.info(s"ROUTING TABLE: $routingTable")
+      log.info(s"REVERSE: ${routingTable.reverseMapping}")
     case Node.GetIdentifiers(exceptEndpoint) =>
       //log.info(s"Getting identifiers except $exceptEndpoint")
       val identifiers = routingTable.identifiers(exceptEndpoint) + identifier
