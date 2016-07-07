@@ -25,7 +25,8 @@ class Connection(endpoint: Endpoint, behavior: Connection.BehaviorWrap) extends 
       behavior.didDisconnect()
       context.stop(self)
     case Tcp.Received(byteString) =>
-      Message.decode(buffer ++ byteString.toArray) match {
+      val b: Array[Byte] = (buffer.toList ++ byteString.toArray.toList).toArray
+      Message.decode(b) match {
         case Some(decodeResult) =>
           val message = decodeResult.value
           behavior.didRead(message)
