@@ -31,8 +31,10 @@ class Connection(endpoint: Endpoint, behavior: Connection.BehaviorWrap) extends 
           val message = decodeResult.value
           behavior.didRead(message)
           buffer = decodeResult.remainder.toByteArray
+          println(s"BUFFER: ${buffer.toList}")
         case None =>
           buffer = b
+          println(s"BUFFER: ${buffer.toList}")
           log.error(s"Received ${byteString.length} bytes, can not decode yet")
       }
   }
