@@ -4,6 +4,7 @@ import java.net.InetSocketAddress
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.io.Tcp
+import akka.util.ByteString
 
 class Connection(endpoint: Endpoint, behavior: Connection.BehaviorWrap) extends Actor with ActorLogging {
   var buffer: Array[Byte] = Array.empty
@@ -32,6 +33,7 @@ class Connection(endpoint: Endpoint, behavior: Connection.BehaviorWrap) extends 
           behavior.didRead(message)
           buffer = decodeResult.remainder.toByteArray
           println(s"BUFFER: ${buffer.toList}")
+          self ! Tcp.Received(ByteString())
         case None =>
           buffer = b
           println(s"BUFFER: ${buffer.toList}")
