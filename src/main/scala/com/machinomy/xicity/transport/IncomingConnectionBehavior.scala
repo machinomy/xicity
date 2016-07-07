@@ -52,7 +52,7 @@ class IncomingConnectionBehavior(node: Node.Wrap, parameters: Parameters) extend
         endpoint.write(message)
       }
     case message: Message.Shot =>
-      log.info(s"Received external $message")
+      log.info(s"Received external $message: ${message.text.toList}")
       node.didReceive(message.from, message.to, message.protocol, message.text, message.expiration)
   }
 
