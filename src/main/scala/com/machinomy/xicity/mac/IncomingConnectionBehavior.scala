@@ -1,15 +1,11 @@
-package com.machinomy.xicity.transport
+package com.machinomy.xicity.mac
 
 import akka.actor.{Actor, ActorLogging, Props}
 
-import scala.util.Random
-
-class OutgoingConnectionBehavior(kernel: Kernel.Wrap, parameters: Parameters) extends Actor with ActorLogging {
+class IncomingConnectionBehavior(kernel: Kernel.Wrap, parameters: Parameters) extends Actor with ActorLogging {
   import context.dispatcher
 
   var endpointOpt: Option[Endpoint] = None
-
-  val tick = context.system.scheduler.schedule(parameters.tickInitialDelay, parameters.tickInterval, self, OutgoingConnectionBehavior.Tick)
 
   override def receive: Receive = expectConnect orElse expectFailure
 
@@ -17,11 +13,8 @@ class OutgoingConnectionBehavior(kernel: Kernel.Wrap, parameters: Parameters) ex
     case Connection.DidConnect(endpoint, remoteAddress, localAddress) =>
       endpointOpt = Some(endpoint)
       kernel.didAddConnection(endpoint, Connection.BehaviorWrap(self))
-      log.info(s"Connected to $endpoint, saying Hello")
-      val nonce = Random.nextInt()
-      val helloMessage = Message.Hello(endpoint.address, nonce)
-      endpoint.write(helloMessage)
-      context.become(expectHelloResponse(nonce) orElse expectFailure)
+      log.info(s"Connected to $endpoint, waiting for Hello")
+      context.become(expectHello orElse expectFailure)
   }
 
   def expectFailure: Receive = {
@@ -31,29 +24,19 @@ class OutgoingConnectionBehavior(kernel: Kernel.Wrap, parameters: Parameters) ex
     case Connection.DidClose() =>
       log.info(s"Closed")
       context.stop(self)
-    case OutgoingConnectionBehavior.Tick =>
-      // Do Nothing
     case something => throw new IllegalArgumentException(s"Not expected anything, got $something")
   }
 
-  def expectHelloResponse(nonce: Int): Receive = {
-    case Message.HelloResponse(myAddress, theirNonce) =>
-      if (theirNonce == nonce) {
-        log.info(s"Received valid HelloResponse")
+  def expectHello: Receive = {
+    case Message.Hello(myAddress, nonce) =>
+      for (endpoint <- endpointOpt) {
+        log.info(s"Received Hello, sending HelloResponse")
+        endpoint.write(Message.HelloResponse(endpoint.address, nonce))
         context.become(expectMessages orElse expectFailure)
-      } else {
-        throw new IllegalArgumentException(s"Expected HelloResponse.nonce set to $nonce, got $theirNonce")
       }
   }
 
   def expectMessages: Receive = {
-    case OutgoingConnectionBehavior.Tick =>
-      endpointOpt match {
-        case Some(endpoint) =>
-          for (identifiers <- kernel.getIdentifiers(endpoint)) endpoint.write(Message.Pex(identifiers))
-        case None =>
-          // Do Nothing
-      }
     case Message.Pex(identifiers) =>
       for (endpoint <- endpointOpt) {
         kernel.didPex(endpoint, identifiers)
@@ -67,17 +50,18 @@ class OutgoingConnectionBehavior(kernel: Kernel.Wrap, parameters: Parameters) ex
       for (endpoint <- endpointOpt) {
         endpoint.write(message)
       }
-    case something => log.error(s"Got $something")
+    case message: Message.Shot =>
+      kernel.didReceive(message.from, message.to, message.protocol, message.text, message.expiration)
+    case something => throw new IllegalArgumentException(s"Not expected anything, got $something")
   }
 
   override def postStop(): Unit =
     for (endpoint <- endpointOpt) {
       kernel.didRemoveConnection(endpoint)
     }
+
 }
 
-object OutgoingConnectionBehavior {
-  object Tick
-
-  def props(kernel: Kernel.Wrap, parameters: Parameters) = Props(classOf[OutgoingConnectionBehavior], kernel, parameters)
+object IncomingConnectionBehavior {
+  def props(kernel: Kernel.Wrap, parameters: Parameters): Props = Props(classOf[IncomingConnectionBehavior], kernel, parameters)
 }

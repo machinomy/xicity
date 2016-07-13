@@ -1,8 +1,7 @@
 package com.machinomy.xicity.examples
 
-import akka.actor.{ActorContext, ActorSystem}
-import com.machinomy.xicity.transport._
-import com.typesafe.scalalogging.LazyLogging
+import akka.actor.ActorSystem
+import com.machinomy.xicity.mac._
 
 object ServerExample {
   def run(): Unit = {

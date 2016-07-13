@@ -1,4 +1,4 @@
-package com.machinomy.xicity.transport
+package com.machinomy.xicity.mac
 
 import akka.actor.{ActorContext, ActorRef, Props}
 import akka.io.Tcp

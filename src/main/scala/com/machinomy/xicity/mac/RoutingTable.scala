@@ -1,4 +1,4 @@
-package com.machinomy.xicity.transport
+package com.machinomy.xicity.mac
 
 import com.machinomy.xicity.Identifier
 

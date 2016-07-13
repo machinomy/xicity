@@ -1,8 +1,7 @@
 package com.machinomy.xicity.examples
 
-import akka.actor.{ActorContext, ActorSystem}
-import com.machinomy.xicity.Identifier
-import com.machinomy.xicity.transport._
+import akka.actor.ActorSystem
+import com.machinomy.xicity.mac._
 
 object ClientMonitorExample {
   def run(): Unit = {
