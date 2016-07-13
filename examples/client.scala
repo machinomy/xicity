@@ -2,6 +2,7 @@ import akka.actor._
 import com.github.nscala_time.time.Imports._
 import com.machinomy.xicity._
 import com.machinomy.xicity.mac._
+import com.machinomy.xicity.network.{ClientNode, Kernel}
 
 implicit val system = ActorSystem()
 val identifier = Identifier(10)

@@ -1,6 +1,7 @@
-package com.machinomy.xicity.mac
+package com.machinomy.xicity.network
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import com.machinomy.xicity.mac.{Message, Parameters, Server, ServerBehavior}
 
 class ServerNode(node: Kernel.Wrap, parameters: Parameters) extends Actor with ActorLogging {
   var serverActorOpt: Option[ActorRef] = None

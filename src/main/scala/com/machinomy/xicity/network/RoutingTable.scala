@@ -1,6 +1,7 @@
-package com.machinomy.xicity.mac
+package com.machinomy.xicity.network
 
 import com.machinomy.xicity.Identifier
+import com.machinomy.xicity.mac.Endpoint
 
 case class RoutingTable(mapping: Map[Endpoint, Set[Identifier]]) {
   def +(m: (Endpoint, Set[Identifier])): RoutingTable = {

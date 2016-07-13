@@ -4,6 +4,7 @@ import java.net.InetSocketAddress
 
 import akka.actor.Props
 import akka.io.Tcp
+import com.machinomy.xicity.network.Kernel
 
 class ServerBehavior(kernel: Kernel.Wrap, parameters: Parameters) extends Server.Behavior {
   var localAddressOpt: Option[InetSocketAddress] = None

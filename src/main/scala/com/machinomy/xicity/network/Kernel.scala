@@ -1,9 +1,10 @@
-package com.machinomy.xicity.mac
+package com.machinomy.xicity.network
 
 import akka.actor.{Actor, ActorContext, ActorLogging, ActorRef, Props}
 import akka.pattern.ask
 import com.github.nscala_time.time.Imports._
 import com.machinomy.xicity.Identifier
+import com.machinomy.xicity.mac._
 
 import scala.concurrent.Future
 

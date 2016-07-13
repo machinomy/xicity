@@ -1,6 +1,7 @@
 package com.machinomy.xicity.mac
 
 import akka.actor.{Actor, ActorLogging, Props}
+import com.machinomy.xicity.network.Kernel
 
 class IncomingConnectionBehavior(kernel: Kernel.Wrap, parameters: Parameters) extends Actor with ActorLogging {
   import context.dispatcher

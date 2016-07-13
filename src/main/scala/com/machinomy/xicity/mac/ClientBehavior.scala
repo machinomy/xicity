@@ -2,6 +2,7 @@ package com.machinomy.xicity.mac
 
 import akka.actor.{ActorContext, ActorRef, Props}
 import akka.io.Tcp
+import com.machinomy.xicity.network.Kernel
 
 class ClientBehavior(kernel: Kernel.Wrap, parameters: Parameters) extends Client.Behavior {
   override def handle: Handle = {

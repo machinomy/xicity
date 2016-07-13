@@ -10,3 +10,13 @@ Xicity is a distributed communications library inspired by Tox.
 - [ ] Streaming
 - [ ] Resource-optimized wire format
 - [ ] Resilience
+
+# Call stack
+
+## Server
+
+    Server(ServerBehavior(Kernel)) -> Connection(IncomingConnectionBehavior(Kernel))
+    
+## Client
+
+    ClientMonitor(Kernel) -> Client(ClientBehavior(Node)) -> Connection(OutgoingConnectionBehavior(Kernel))
