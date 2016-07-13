@@ -2,7 +2,7 @@ package com.machinomy.xicity.transport
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 
-class ServerNode(node: Node.Wrap, parameters: Parameters) extends Actor with ActorLogging {
+class ServerNode(node: Kernel.Wrap, parameters: Parameters) extends Actor with ActorLogging {
   var serverActorOpt: Option[ActorRef] = None
   var serverBehaviorActorOpt: Option[ActorRef] = None
 
@@ -22,6 +22,6 @@ class ServerNode(node: Node.Wrap, parameters: Parameters) extends Actor with Act
 }
 
 object ServerNode {
-  def props(node: Node.Wrap, parameters: Parameters = Parameters.default) =
+  def props(node: Kernel.Wrap, parameters: Parameters = Parameters.default) =
     Props(classOf[ServerNode], node, parameters)
 }

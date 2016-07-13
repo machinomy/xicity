@@ -5,7 +5,7 @@ import java.net.InetSocketAddress
 import akka.actor.Props
 import akka.io.Tcp
 
-class ServerBehavior(node: Node.Wrap, parameters: Parameters) extends Server.Behavior {
+class ServerBehavior(kernel: Kernel.Wrap, parameters: Parameters) extends Server.Behavior {
   var localAddressOpt: Option[InetSocketAddress] = None
 
   override def handle: Handle = {
@@ -31,9 +31,9 @@ class ServerBehavior(node: Node.Wrap, parameters: Parameters) extends Server.Beh
 
   def newHandler(endpoint: Endpoint) = context.actorOf(Connection.props(endpoint, connectionBehavior()))
 
-  def connectionBehavior() = Connection.BehaviorWrap(context.actorOf(IncomingConnectionBehavior.props(node, parameters)))
+  def connectionBehavior() = Connection.BehaviorWrap(context.actorOf(IncomingConnectionBehavior.props(kernel, parameters)))
 }
 
 object ServerBehavior {
-  def props(node: Node.Wrap, parameters: Parameters) = Props(classOf[ServerBehavior], node, parameters)
+  def props(kernel: Kernel.Wrap, parameters: Parameters) = Props(classOf[ServerBehavior], kernel, parameters)
 }

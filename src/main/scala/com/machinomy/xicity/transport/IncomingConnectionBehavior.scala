@@ -2,7 +2,7 @@ package com.machinomy.xicity.transport
 
 import akka.actor.{Actor, ActorLogging, Props}
 
-class IncomingConnectionBehavior(node: Node.Wrap, parameters: Parameters) extends Actor with ActorLogging {
+class IncomingConnectionBehavior(kernel: Kernel.Wrap, parameters: Parameters) extends Actor with ActorLogging {
   import context.dispatcher
 
   var endpointOpt: Option[Endpoint] = None
@@ -12,7 +12,7 @@ class IncomingConnectionBehavior(node: Node.Wrap, parameters: Parameters) extend
   def expectConnect: Receive = {
     case Connection.DidConnect(endpoint, remoteAddress, localAddress) =>
       endpointOpt = Some(endpoint)
-      node.didAddConnection(endpoint, Connection.BehaviorWrap(self))
+      kernel.didAddConnection(endpoint, Connection.BehaviorWrap(self))
       log.info(s"Connected to $endpoint, waiting for Hello")
       context.become(expectHello orElse expectFailure)
   }
@@ -39,29 +39,29 @@ class IncomingConnectionBehavior(node: Node.Wrap, parameters: Parameters) extend
   def expectMessages: Receive = {
     case Message.Pex(identifiers) =>
       for (endpoint <- endpointOpt) {
-        node.didPex(endpoint, identifiers)
-        for (identifiers <- node.getIdentifiers(endpoint)) endpoint.write(Message.PexResponse(identifiers))
+        kernel.didPex(endpoint, identifiers)
+        for (identifiers <- kernel.getIdentifiers(endpoint)) endpoint.write(Message.PexResponse(identifiers))
       }
     case Message.PexResponse(identifiers) =>
       for (endpoint <- endpointOpt) {
-        node.didPex(endpoint, identifiers)
+        kernel.didPex(endpoint, identifiers)
       }
     case Connection.DoWrite(message) =>
       for (endpoint <- endpointOpt) {
         endpoint.write(message)
       }
     case message: Message.Shot =>
-      node.didReceive(message.from, message.to, message.protocol, message.text, message.expiration)
+      kernel.didReceive(message.from, message.to, message.protocol, message.text, message.expiration)
     case something => throw new IllegalArgumentException(s"Not expected anything, got $something")
   }
 
   override def postStop(): Unit =
     for (endpoint <- endpointOpt) {
-      node.didRemoveConnection(endpoint)
+      kernel.didRemoveConnection(endpoint)
     }
 
 }
 
 object IncomingConnectionBehavior {
-  def props(node: Node.Wrap, parameters: Parameters): Props = Props(classOf[IncomingConnectionBehavior], node, parameters)
+  def props(kernel: Kernel.Wrap, parameters: Parameters): Props = Props(classOf[IncomingConnectionBehavior], kernel, parameters)
 }

@@ -1,6 +1,6 @@
+import akka.actor._
 import com.machinomy.xicity._
 import com.machinomy.xicity.transport._
-import akka.actor._
 
 implicit val system = ActorSystem()
 val identifier = Identifier(12)
@@ -11,8 +11,8 @@ class Peer extends Actor with ActorLogging {
   var serverNodeActor: ActorRef = null
 
   override def preStart(): Unit = {
-    nodeActor = context.actorOf(Node.props(identifier, self))
-    serverNodeActor = context.actorOf(ServerNode.props(Node.Wrap(nodeActor, Parameters.default)))
+    nodeActor = context.actorOf(Kernel.props(identifier, self))
+    serverNodeActor = context.actorOf(ServerNode.props(Kernel.Wrap(nodeActor, Parameters.default)))
   }
 
   override def receive: Receive = {

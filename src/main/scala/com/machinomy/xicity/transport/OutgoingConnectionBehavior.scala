@@ -4,7 +4,7 @@ import akka.actor.{Actor, ActorLogging, Props}
 
 import scala.util.Random
 
-class OutgoingConnectionBehavior(node: Node.Wrap, parameters: Parameters) extends Actor with ActorLogging {
+class OutgoingConnectionBehavior(kernel: Kernel.Wrap, parameters: Parameters) extends Actor with ActorLogging {
   import context.dispatcher
 
   var endpointOpt: Option[Endpoint] = None
@@ -16,7 +16,7 @@ class OutgoingConnectionBehavior(node: Node.Wrap, parameters: Parameters) extend
   def expectConnect: Receive = {
     case Connection.DidConnect(endpoint, remoteAddress, localAddress) =>
       endpointOpt = Some(endpoint)
-      node.didAddConnection(endpoint, Connection.BehaviorWrap(self))
+      kernel.didAddConnection(endpoint, Connection.BehaviorWrap(self))
       log.info(s"Connected to $endpoint, saying Hello")
       val nonce = Random.nextInt()
       val helloMessage = Message.Hello(endpoint.address, nonce)
@@ -50,18 +50,18 @@ class OutgoingConnectionBehavior(node: Node.Wrap, parameters: Parameters) extend
     case OutgoingConnectionBehavior.Tick =>
       endpointOpt match {
         case Some(endpoint) =>
-          for (identifiers <- node.getIdentifiers(endpoint)) endpoint.write(Message.Pex(identifiers))
+          for (identifiers <- kernel.getIdentifiers(endpoint)) endpoint.write(Message.Pex(identifiers))
         case None =>
           // Do Nothing
       }
     case Message.Pex(identifiers) =>
       for (endpoint <- endpointOpt) {
-        node.didPex(endpoint, identifiers)
-        for (identifiers <- node.getIdentifiers(endpoint)) endpoint.write(Message.PexResponse(identifiers))
+        kernel.didPex(endpoint, identifiers)
+        for (identifiers <- kernel.getIdentifiers(endpoint)) endpoint.write(Message.PexResponse(identifiers))
       }
     case Message.PexResponse(identifiers) =>
       for (endpoint <- endpointOpt) {
-        node.didPex(endpoint, identifiers)
+        kernel.didPex(endpoint, identifiers)
       }
     case Connection.DoWrite(message) =>
       for (endpoint <- endpointOpt) {
@@ -72,12 +72,12 @@ class OutgoingConnectionBehavior(node: Node.Wrap, parameters: Parameters) extend
 
   override def postStop(): Unit =
     for (endpoint <- endpointOpt) {
-      node.didRemoveConnection(endpoint)
+      kernel.didRemoveConnection(endpoint)
     }
 }
 
 object OutgoingConnectionBehavior {
   object Tick
 
-  def props(node: Node.Wrap, parameters: Parameters) = Props(classOf[OutgoingConnectionBehavior], node, parameters)
+  def props(kernel: Kernel.Wrap, parameters: Parameters) = Props(classOf[OutgoingConnectionBehavior], kernel, parameters)
 }

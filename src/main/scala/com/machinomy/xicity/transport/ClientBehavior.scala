@@ -3,7 +3,7 @@ package com.machinomy.xicity.transport
 import akka.actor.{ActorContext, ActorRef, Props}
 import akka.io.Tcp
 
-class ClientBehavior(node: Node.Wrap, parameters: Parameters) extends Client.Behavior {
+class ClientBehavior(kernel: Kernel.Wrap, parameters: Parameters) extends Client.Behavior {
   override def handle: Handle = {
     case Client.DidConnect(endpoint, remoteAddress, localAddress) =>
       log.info(s"Connected to $endpoint")
@@ -22,9 +22,9 @@ class ClientBehavior(node: Node.Wrap, parameters: Parameters) extends Client.Beh
     context.actorOf(Connection.props(endpoint, connectionBehavior))
 
   def connectionBehavior()(implicit context: ActorContext) =
-    Connection.BehaviorWrap(context.actorOf(OutgoingConnectionBehavior.props(node, parameters)))
+    Connection.BehaviorWrap(context.actorOf(OutgoingConnectionBehavior.props(kernel, parameters)))
 }
 
 object ClientBehavior {
-  def props(node: Node.Wrap, parameters: Parameters) = Props(classOf[ClientBehavior], node, parameters)
+  def props(kernel: Kernel.Wrap, parameters: Parameters) = Props(classOf[ClientBehavior], kernel, parameters)
 }

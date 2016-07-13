@@ -2,35 +2,35 @@ package com.machinomy.xicity.transport
 
 import akka.actor.{Actor, ActorContext, ActorLogging, ActorRef, Props}
 import akka.pattern.ask
-import com.machinomy.xicity.Identifier
 import com.github.nscala_time.time.Imports._
+import com.machinomy.xicity.Identifier
 
 import scala.concurrent.Future
 
-class Node(identifier: Identifier, peerOpt: Option[ActorRef]) extends Actor with ActorLogging {
+class Kernel(identifier: Identifier, peerOpt: Option[ActorRef]) extends Actor with ActorLogging {
   var routingTable: RoutingTable = RoutingTable.empty
   var runningConnectionBehaviors: Map[Endpoint, Connection.BehaviorWrap] = Map.empty
   var isReady: Boolean = false
 
   override def receive: Receive = {
-    case Node.DidAddConnection(endpoint, connectionBehavior) =>
+    case Kernel.DidAddConnection(endpoint, connectionBehavior) =>
       log.info(s"Adding connection behavior for $endpoint")
       runningConnectionBehaviors += (endpoint -> connectionBehavior)
-    case Node.DidRemoveConnection(endpoint) =>
+    case Kernel.DidRemoveConnection(endpoint) =>
       log.info(s"Removing connection behavior for $endpoint")
       runningConnectionBehaviors -= endpoint
-    case Node.DidPex(endpoint, identifiers) =>
+    case Kernel.DidPex(endpoint, identifiers) =>
       log.info(s"DidPex: $endpoint, $identifiers")
       routingTable += (endpoint -> identifiers)
       if (routingTable.mapping.nonEmpty && !isReady) {
         for (peer <- peerOpt) peer ! Peer.IsReady()
         isReady = true
       }
-    case Node.GetIdentifiers(exceptEndpoint) =>
+    case Kernel.GetIdentifiers(exceptEndpoint) =>
       log.info(s"Getting identifiers except $exceptEndpoint")
       val identifiers = routingTable.identifiers(exceptEndpoint) + identifier
       sender ! identifiers
-    case Node.DidReceiveShot(from, to, protocol, text, expiration: Long) =>
+    case Kernel.DidReceiveShot(from, to, protocol, text, expiration: Long) =>
       log.info(s"Received message: $from -> $to")
       if (expiration > DateTime.now.getMillis / 1000) {
         if (to == identifier) {
@@ -61,7 +61,7 @@ class Node(identifier: Identifier, peerOpt: Option[ActorRef]) extends Actor with
   }
 }
 
-object Node {
+object Kernel {
   sealed trait Event
   case class DidAddConnection(endpoint: Endpoint, connectionBehavior: Connection.BehaviorWrap) extends Event
   case class DidRemoveConnection(endpoint: Endpoint) extends Event
@@ -89,7 +89,7 @@ object Node {
       actorRef ! DidReceiveShot(from, to, protocol, text, expiration)
   }
 
-  def props(identifier: Identifier, peer: ActorRef) = Props(classOf[Node], identifier, Some(peer))
+  def props(identifier: Identifier, peer: ActorRef) = Props(classOf[Kernel], identifier, Some(peer))
 
-  def props(identifier: Identifier) = Props(classOf[Node], identifier, None)
+  def props(identifier: Identifier) = Props(classOf[Kernel], identifier, None)
 }
