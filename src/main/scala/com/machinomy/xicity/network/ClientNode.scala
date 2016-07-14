@@ -13,12 +13,8 @@ class ClientNode(kernel: Kernel.Wrap, parameters: Parameters) extends Actor with
   }
 
   override def receive: Receive = {
-    case message: Message.Shot =>
+    case message: Message.Single =>
       kernel.didReceive(message.from, message.to, message.protocol, message.text, message.expiration)
-    case message: Message.MultiShot =>
-      for (identifier <- message.to) {
-        kernel.didReceive(message.from, identifier, message.protocol, message.text, message.expiration)
-      }
     case something => throw new IllegalArgumentException(s"Got unexpected $something")
   }
 }

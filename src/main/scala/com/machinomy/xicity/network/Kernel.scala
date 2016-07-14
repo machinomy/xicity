@@ -45,18 +45,18 @@ class Kernel(identifier: Identifier, peerOpt: Option[ActorRef]) extends Actor wi
   }
 
   def relay(from: Identifier, to: Identifier, protocol: Long, text: Array[Byte], expiration: Long): Unit = {
-    log.info(s"Relaying Shot from $from to $to")
+    log.info(s"Relaying Single from $from to $to")
     for {
       endpoint <- routingTable.closestEndpoints(to, identifier)
       connectionBehavior <- runningConnectionBehaviors.get(endpoint)
     } {
-      log.info(s"Sending Shot to $endpoint")
-      connectionBehavior.doWrite(Message.Shot(from, to, protocol, text, expiration))
+      log.info(s"Sending Single to $endpoint")
+      connectionBehavior.doWrite(Message.Single(from, to, protocol, text, expiration))
     }
   }
 
   def receiveToSelf(from: Identifier, to: Identifier, protocol: Long, text: Array[Byte], expiration: Long): Unit = {
-    val message = Message.Shot(from, to, protocol, text, expiration)
+    val message = Message.Single(from, to, protocol, text, expiration)
     log.info(s"Received $message to myself")
     for (peer <- peerOpt) peer ! message
   }

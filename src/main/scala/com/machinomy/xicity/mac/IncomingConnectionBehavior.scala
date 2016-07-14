@@ -51,7 +51,7 @@ class IncomingConnectionBehavior(kernel: Kernel.Wrap, parameters: Parameters) ex
       for (endpoint <- endpointOpt) {
         endpoint.write(message)
       }
-    case message: Message.Shot =>
+    case message: Message.Single =>
       kernel.didReceive(message.from, message.to, message.protocol, message.text, message.expiration)
     case something => throw new IllegalArgumentException(s"Not expected anything, got $something")
   }
