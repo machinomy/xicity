@@ -176,5 +176,4 @@ object Message {
 
   case class Single(from: Identifier, to: Identifier, protocol: Long, text: Array[Byte], expiration: Long) extends Message
 
-
 }
