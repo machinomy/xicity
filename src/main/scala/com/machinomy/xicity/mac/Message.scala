@@ -48,7 +48,7 @@ object Message {
     val bytesCodec = bytes(Identifier.BYTES_LENGTH)
     override def encode(value: Identifier): Attempt[BitVector] =
       for {
-        bytes <- bytesCodec.encode(ByteVector(value.n.toByteArray).padLeft(Identifier.BYTES_LENGTH))
+        bytes <- bytesCodec.encode(ByteVector(value.number.toByteArray).padLeft(Identifier.BYTES_LENGTH))
       } yield bytes
 
     override def sizeBound: SizeBound = bytesCodec.sizeBound
