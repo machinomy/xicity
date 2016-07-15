@@ -6,25 +6,25 @@ import akka.actor.Props
 import akka.io.Tcp
 import com.machinomy.xicity.network.Kernel
 
-class ServerBehavior(kernel: Kernel.Wrap, parameters: Parameters) extends Server.Behavior {
+class ServerBehavior(kernel: Kernel.Wrap, parameters: Parameters) extends ServerMonitor.Behavior {
   var localAddressOpt: Option[InetSocketAddress] = None
 
   override def handle: Handle = {
-    case Server.DidBound(localAddress) =>
+    case ServerMonitor.DidBound(localAddress) =>
       localAddressOpt = Some(localAddress)
       log.info(s"Bound to $localAddress")
-    case Server.DidConnect(tcpActorRef, remoteAddress, localAddress) =>
+    case ServerMonitor.DidConnect(tcpActorRef, remoteAddress, localAddress) =>
       log.info(s"Received connection from $remoteAddress")
       val endpoint = Endpoint(Address(remoteAddress), Wire(tcpActorRef))
       val handler = newHandler(endpoint)
       tcpActorRef ! Tcp.Register(handler)
       handler ! Tcp.Connected(remoteAddress, localAddress)
-      log.info(s"Server bound to $localAddressOpt got connection from $remoteAddress")
-    case Server.DidDisconnect() =>
+      log.info(s"ServerMonitor bound to $localAddressOpt got connection from $remoteAddress")
+    case ServerMonitor.DidDisconnect() =>
       log.info(s"Disconnected")
       localAddressOpt = None
       context.stop(self)
-    case Server.DidClose() =>
+    case ServerMonitor.DidClose() =>
       log.info(s"Closed")
       localAddressOpt = None
       context.stop(self)
