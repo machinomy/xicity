@@ -1,7 +1,7 @@
 import akka.actor._
 import com.machinomy.xicity._
 import com.machinomy.xicity.mac._
-import com.machinomy.xicity.network.{Kernel, ServerNode}
+import com.machinomy.xicity.network.{Kernel, Peer, ServerNode}
 
 implicit val system = ActorSystem()
 val identifier = Identifier(12)
