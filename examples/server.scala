@@ -1,7 +1,7 @@
 import akka.actor._
 import com.machinomy.xicity._
 import com.machinomy.xicity.mac._
-import com.machinomy.xicity.network.{Kernel, Peer, ServerNode}
+import com.machinomy.xicity.network.Kernel
 
 implicit val system = ActorSystem()
 val identifier = Identifier(12)
@@ -13,11 +13,11 @@ class Peer extends Actor with ActorLogging {
 
   override def preStart(): Unit = {
     nodeActor = context.actorOf(Kernel.props(identifier, self))
-    serverNodeActor = context.actorOf(ServerNode.props(Kernel.Wrap(nodeActor, Parameters.default)))
+    serverNodeActor = context.actorOf(Server.props(Kernel.Wrap(nodeActor, Parameters.default)))
   }
 
   override def receive: Receive = {
-    case Peer.IsReady() =>
+    case Node.IsReady() =>
       log.info("NODEISREADY")
     case m: Message.Single =>
       log.info(s"RECEIVEDSHOT $m")

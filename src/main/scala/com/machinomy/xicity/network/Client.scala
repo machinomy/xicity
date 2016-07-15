@@ -3,7 +3,7 @@ package com.machinomy.xicity.network
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import com.machinomy.xicity.mac.{ClientMonitor, Message, Parameters}
 
-class ClientNode(kernel: Kernel.Wrap, parameters: Parameters) extends Actor with ActorLogging {
+class Client(kernel: Kernel.Wrap, parameters: Parameters) extends Actor with ActorLogging {
   var clientMonitorActorOpt: Option[ActorRef] = None
 
   override def preStart(): Unit = {
@@ -19,9 +19,12 @@ class ClientNode(kernel: Kernel.Wrap, parameters: Parameters) extends Actor with
   }
 }
 
-object ClientNode extends NodeCompanion[ClientNode] {
-  def props(kernel: Kernel.Wrap, parameters: Parameters = Parameters.default) =
-    Props(classOf[ClientNode], kernel, parameters)
+object Client extends NodeCompanion[Client] {
+  def props(kernel: Kernel.Wrap) =
+    Props(classOf[Client], kernel, Parameters.default)
 
-  implicit val companion: NodeCompanion[ClientNode] = this
+  def props(kernel: Kernel.Wrap, parameters: Parameters) =
+    Props(classOf[Client], kernel, parameters)
+
+  implicit val companion: NodeCompanion[Client] = this
 }

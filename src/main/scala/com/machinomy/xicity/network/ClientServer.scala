@@ -3,14 +3,14 @@ package com.machinomy.xicity.network
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import com.machinomy.xicity.mac._
 
-class FullNode(kernel: Kernel.Wrap, parameters: Parameters) extends Actor with ActorLogging {
+class ClientServer(kernel: Kernel.Wrap, parameters: Parameters) extends Actor with ActorLogging {
   var clientNodeOpt: Option[ActorRef] = None
   var serverNodeOpt: Option[ActorRef] = None
 
   override def preStart(): Unit = {
-    val clientNode = context.actorOf(ClientNode.props(kernel, parameters))
+    val clientNode = context.actorOf(Client.props(kernel, parameters))
     clientNodeOpt = Some(clientNode)
-    val serverNode = context.actorOf(ServerNode.props(kernel, parameters))
+    val serverNode = context.actorOf(Server.props(kernel, parameters))
     serverNodeOpt = Some(serverNode)
   }
 
@@ -21,9 +21,12 @@ class FullNode(kernel: Kernel.Wrap, parameters: Parameters) extends Actor with A
   }
 }
 
-object FullNode extends NodeCompanion[FullNode] {
-  def props(kernel: Kernel.Wrap, parameters: Parameters = Parameters.default) =
-    Props(classOf[FullNode], kernel, parameters)
+object ClientServer extends NodeCompanion[ClientServer] {
+  def props(kernel: Kernel.Wrap) =
+    Props(classOf[ClientServer], kernel, Parameters.default)
 
-  implicit val companion: NodeCompanion[FullNode] = this
+  def props(kernel: Kernel.Wrap, parameters: Parameters) =
+    Props(classOf[ClientServer], kernel, parameters)
+
+  implicit val companion: NodeCompanion[ClientServer] = this
 }

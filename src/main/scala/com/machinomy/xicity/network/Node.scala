@@ -4,7 +4,7 @@ import akka.actor._
 import com.machinomy.xicity.Identifier
 import com.machinomy.xicity.mac.Parameters
 
-class Peer[A: NodeCompanion](identifier: Identifier,
+class Node[A: NodeCompanion](identifier: Identifier,
                              callback: ActorRef,
                              parameters: Parameters)
   extends Actor with ActorLogging {
@@ -19,7 +19,7 @@ class Peer[A: NodeCompanion](identifier: Identifier,
   }
 
   override def receive: Receive = {
-    case e: Peer.Callback => callback ! e
+    case e: Node.Callback => callback ! e
     case anything => nodeActor ! anything
   }
 
@@ -29,14 +29,14 @@ class Peer[A: NodeCompanion](identifier: Identifier,
   }
 }
 
-object Peer {
+object Node {
   sealed trait Callback
   case class IsReady() extends Callback
   case class Received(from: Identifier, protocol: Long, text: Array[Byte], expiration: Long) extends Callback
 
   def props[A: NodeCompanion](identifier: Identifier, callback: ActorRef, parameters: Parameters) =
-    Props(classOf[Peer[A]], identifier, callback, parameters)
+    Props(classOf[Node[A]], identifier, callback, parameters)
 
   def props[A: NodeCompanion](identifier: Identifier, callback: ActorRef) =
-    Props(classOf[Peer[A]], identifier, callback, Parameters.default)
+    Props(classOf[Node[A]], identifier, callback, Parameters.default)
 }
