@@ -72,9 +72,6 @@ object Kernel {
   sealed trait Command extends Event
   case class GetIdentifiers(except: Endpoint) extends Command
 
-  sealed trait Callback extends Event
-  case class IsReady() extends Callback
-
   case class Wrap(actorRef: ActorRef, parameters: Parameters) extends ActorWrap {
     implicit val timeout = parameters.timeout
 
