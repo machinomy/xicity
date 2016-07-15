@@ -21,7 +21,9 @@ class FullNode(kernel: Kernel.Wrap, parameters: Parameters) extends Actor with A
   }
 }
 
-object FullNode {
+object FullNode extends NodeCompanion[FullNode] {
   def props(kernel: Kernel.Wrap, parameters: Parameters = Parameters.default) =
     Props(classOf[FullNode], kernel, parameters)
+
+  implicit val companion: NodeCompanion[FullNode] = this
 }

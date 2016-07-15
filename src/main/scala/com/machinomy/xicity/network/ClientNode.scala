@@ -19,7 +19,9 @@ class ClientNode(kernel: Kernel.Wrap, parameters: Parameters) extends Actor with
   }
 }
 
-object ClientNode {
+object ClientNode extends NodeCompanion[ClientNode] {
   def props(kernel: Kernel.Wrap, parameters: Parameters = Parameters.default) =
     Props(classOf[ClientNode], kernel, parameters)
+
+  implicit val companion: NodeCompanion[ClientNode] = this
 }
