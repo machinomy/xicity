@@ -8,10 +8,10 @@ class ServerNode(node: Kernel.Wrap, parameters: Parameters) extends Actor with A
   var serverBehaviorActorOpt: Option[ActorRef] = None
 
   override def preStart(): Unit = {
-    val serverBehaviorActor = context.actorOf(ServerBehavior.props(node, parameters))
+    val serverBehaviorActor = context.actorOf(ServerBehavior.props(node, parameters), "server-behavior")
     serverBehaviorActorOpt = Some(serverBehaviorActor)
     val serverBehaviorWrap = Server.BehaviorWrap(serverBehaviorActor)
-    val serverActor = context.actorOf(Server.props(parameters.serverAddress, serverBehaviorWrap))
+    val serverActor = context.actorOf(Server.props(parameters.serverAddress, serverBehaviorWrap), "server")
     serverActorOpt = Some(serverActor)
   }
 

@@ -3,22 +3,15 @@ package com.machinomy.xicity.network
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import com.machinomy.xicity.mac._
 
-// @fixme
 class FullNode(kernel: Kernel.Wrap, parameters: Parameters) extends Actor with ActorLogging {
-  var clientMonitorActorOpt: Option[ActorRef] = None
-  var serverActorOpt: Option[ActorRef] = None
-  var serverBehaviorActorOpt: Option[ActorRef] = None
+  var clientNodeOpt: Option[ActorRef] = None
+  var serverNodeOpt: Option[ActorRef] = None
 
   override def preStart(): Unit = {
-    val clientMonitorProps = ClientMonitor.props(kernel, parameters)
-    val clientMonitorActor = context.actorOf(clientMonitorProps)
-    clientMonitorActorOpt = Some(clientMonitorActor)
-
-    val serverBehaviorActor = context.actorOf(ServerBehavior.props(kernel, parameters))
-    serverBehaviorActorOpt = Some(serverBehaviorActor)
-    val serverBehaviorWrap = Server.BehaviorWrap(serverBehaviorActor)
-    val serverActor = context.actorOf(Server.props(parameters.serverAddress, serverBehaviorWrap))
-    serverActorOpt = Some(serverActor)
+    val clientNode = context.actorOf(ClientNode.props(kernel, parameters))
+    clientNodeOpt = Some(clientNode)
+    val serverNode = context.actorOf(ServerNode.props(kernel, parameters))
+    serverNodeOpt = Some(serverNode)
   }
 
   override def receive: Receive = {

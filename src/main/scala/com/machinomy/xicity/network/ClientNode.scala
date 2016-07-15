@@ -8,7 +8,7 @@ class ClientNode(kernel: Kernel.Wrap, parameters: Parameters) extends Actor with
 
   override def preStart(): Unit = {
     val clientMonitorProps = ClientMonitor.props(kernel, parameters)
-    val clientMonitorActor = context.actorOf(clientMonitorProps)
+    val clientMonitorActor = context.actorOf(clientMonitorProps, "client-monitor")
     clientMonitorActorOpt = Some(clientMonitorActor)
   }
 
