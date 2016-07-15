@@ -5,7 +5,7 @@ import java.net.InetSocketAddress
 import akka.actor._
 import akka.io.{IO, Tcp}
 
-class ServerMonitor(local: Address, behavior: ServerMonitor.BehaviorWrap) extends Actor with ActorLogging {
+class Server(local: Address, behavior: Server.BehaviorWrap) extends Actor with ActorLogging {
 
   override def preStart(): Unit = {
     implicit val actorSystem = context.system
@@ -35,14 +35,14 @@ class ServerMonitor(local: Address, behavior: ServerMonitor.BehaviorWrap) extend
   }
 }
 
-object ServerMonitor {
+object Server {
   sealed trait Event
   case class DidBound(localAddress: InetSocketAddress) extends Event
   case class DidConnect(tcpActorRef: ActorRef, remoteAddress: InetSocketAddress, localAddress: InetSocketAddress) extends Event
   case class DidDisconnect() extends Event
   case class DidClose() extends Event
 
-  def props(local: Address, behavior: BehaviorWrap) = Props(classOf[ServerMonitor], local, behavior)
+  def props(local: Address, behavior: BehaviorWrap) = Props(classOf[Server], local, behavior)
 
   case class BehaviorWrap(actorRef: ActorRef) extends ActorWrap {
     def didBound(localAddress: InetSocketAddress)(implicit context: ActorContext) =
