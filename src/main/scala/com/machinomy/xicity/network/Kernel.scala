@@ -24,7 +24,7 @@ class Kernel(identifier: Identifier, peerOpt: Option[ActorRef]) extends Actor wi
       log.info(s"DidPex: $endpoint, $identifiers")
       routingTable += (endpoint -> identifiers)
       if (routingTable.mapping.nonEmpty && !isReady) {
-        for (peer <- peerOpt) peer ! Node.IsReady()
+        for (peer <- peerOpt) peer ! Peer.IsReady()
         isReady = true
       }
     case Kernel.GetIdentifiers(exceptEndpoint) =>

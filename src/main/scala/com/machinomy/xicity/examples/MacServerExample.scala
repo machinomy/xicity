@@ -10,7 +10,7 @@ object MacServerExample extends App {
 
   class Peer extends Actor with ActorLogging {
     override def receive: Receive = {
-      case Node.IsReady() =>
+      case Peer.IsReady() =>
         log.info(s"I am Ready")
     }
   }
