@@ -4,24 +4,24 @@ import akka.util.Timeout
 
 import scala.concurrent.duration._
 
-trait Parameters {
-  def port: Int
-  def seeds: Set[Address]
-  def threshold: Byte
-  def serverAddress: Address
-  def tickInterval: FiniteDuration
-  def tickInitialDelay: FiniteDuration
-  def timeout: Timeout
-}
+case class Parameters(port: Int,
+                      seeds: Set[Address],
+                      threshold: Byte,
+                      serverAddress: Address,
+                      tickInterval: FiniteDuration,
+                      tickInitialDelay: FiniteDuration,
+                      timeout: Timeout)
 
 object Parameters {
-  val default = new Parameters {
-    override def port: Int = Address.PORT
-    override def seeds: Set[Address] = Set(Address("localhost", port))
-    override def threshold: Byte = 8
-    override def serverAddress: Address = Address("0.0.0.0", port)
-    override def tickInterval: FiniteDuration = 3.seconds
-    override def tickInitialDelay: FiniteDuration = 1.seconds
-    override def timeout: Timeout = Timeout(10.seconds)
-  }
+  val DEFAULT_PORT = 4240
+
+  val default = Parameters(
+    port = DEFAULT_PORT,
+    seeds = Set(Address("localhost", DEFAULT_PORT)),
+    threshold = 8,
+    serverAddress = Address("0.0.0.0", DEFAULT_PORT),
+    tickInterval = 3.seconds,
+    tickInitialDelay = 1.seconds,
+    timeout = Timeout(10.seconds)
+  )
 }

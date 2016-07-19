@@ -5,9 +5,7 @@ import java.net.{InetAddress, InetSocketAddress}
 case class Address(address: InetSocketAddress)
 
 object Address {
-  val PORT = 4240
-
-  def apply(host: String): Address = apply(host, PORT)
+  def apply(host: String): Address = apply(host, Parameters.DEFAULT_PORT)
 
   def apply(host: String, port: Int): Address = Address(new InetSocketAddress(host, port))
 

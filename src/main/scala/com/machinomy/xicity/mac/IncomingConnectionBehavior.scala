@@ -53,7 +53,6 @@ class IncomingConnectionBehavior(kernel: Kernel.Wrap, parameters: Parameters) ex
       }
     case message: Message.Single =>
       kernel.didReceive(message.from, message.to, message.text, message.expiration)
-    case something => throw new IllegalArgumentException(s"Not expected anything, got $something")
   }
 
   override def postStop(): Unit =
