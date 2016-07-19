@@ -17,7 +17,7 @@ object Parameters {
 
   val default = Parameters(
     port = DEFAULT_PORT,
-    seeds = Set(),
+    seeds = Set(Address("52.169.238.44")),
     threshold = 8,
     serverAddress = Address("0.0.0.0", DEFAULT_PORT),
     tickInterval = 3.seconds,
