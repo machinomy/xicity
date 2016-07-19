@@ -15,8 +15,8 @@ object ServerApp extends App {
 
   val system = ActorSystem("xicity")
   val identifier = Identifier.random
-  val dummy = system.actorOf(Props(classOf[Dummy]))
+  val dummy = system.actorOf(Props(classOf[Dummy]), "dummy")
   val serverParameters = Parameters.default.copy(seeds = Set.empty)
   val peerProps = PeerBase.props[Server](identifier, dummy, serverParameters)
-  system.actorOf(peerProps)
+  system.actorOf(peerProps, "peer")
 }

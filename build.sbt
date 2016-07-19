@@ -1,6 +1,5 @@
-import sbtrelease.ReleaseStateTransformations._
 import sbtrelease.ReleasePlugin.autoImport.ReleaseKeys._
-import sbtrelease.Version
+import sbtrelease.ReleaseStateTransformations._
 
 name := "xicity"
 
@@ -8,9 +7,11 @@ scalaVersion := "2.11.8"
 
 organization := "com.machinomy"
 
+mainClass in assembly := Some("com.machinomy.xicity.examples.SeedApp")
+
 libraryDependencies ++= Seq(
   "org.scodec" %% "scodec-core" % "1.9.0",
-  "com.typesafe.akka" %% "akka-actor" % "2.4.5",
+  "com.typesafe.akka" %% "akka-actor" % "2.4.8",
   "com.github.nscala-time" %% "nscala-time" % "2.10.0",
   "org.slf4j" % "slf4j-simple" % "1.7.21",
   "org.scalatest" %% "scalatest" % "2.2.6" % "test",

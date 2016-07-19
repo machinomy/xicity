@@ -15,8 +15,8 @@ object ClientApp extends App {
 
   val system = ActorSystem("xicity")
   val identifier = Identifier.random
-  val dummy = system.actorOf(Props(classOf[Dummy]))
+  val dummy = system.actorOf(Props(classOf[Dummy]), "dummy")
   val clientParameters = Parameters.default.copy(seeds = Set(Address("0.0.0.0")))
   val peerProps = PeerBase.props[Client](identifier, dummy, clientParameters)
-  system.actorOf(peerProps)
+  system.actorOf(peerProps, "peer")
 }
