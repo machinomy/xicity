@@ -17,7 +17,7 @@ class Server(node: Kernel.Wrap, parameters: mac.Parameters) extends Actor with A
 
   override def receive: Receive = {
     case message: mac.Message.Single =>
-      node.didReceive(message.from, message.to, message.protocol, message.text, message.expiration)
+      node.didReceive(message.from, message.to, message.text, message.expiration)
     case something => throw new IllegalArgumentException(s"Got unexpected $something")
   }
 }

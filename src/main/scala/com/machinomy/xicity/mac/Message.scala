@@ -122,10 +122,9 @@ object Message {
       for {
         fromBytes <- identifierCodec.encode(value.from)
         toBytes <- identifierCodec.encode(value.to)
-        protocolBytes <- int64L.encode(value.protocol)
         textBytes <- textCodec.encode(ByteVector(value.text))
         expirationBytes <- expirationCodec.encode(value.expiration)
-      } yield fromBytes ++ toBytes ++ protocolBytes ++ textBytes ++ expirationBytes
+      } yield fromBytes ++ toBytes ++ textBytes ++ expirationBytes
 
     override def sizeBound: SizeBound =
       identifierCodec.sizeBound + identifierCodec.sizeBound + int64L.sizeBound + textCodec.sizeBound + expirationCodec.sizeBound
@@ -136,13 +135,11 @@ object Message {
         from = fromR.value
         toR <- identifierCodec.decode(fromR.remainder)
         to = toR.value
-        protocolR <- int64L.decode(toR.remainder)
-        protocol = protocolR.value
         textR <- textCodec.decode(toR.remainder)
         text = textR.value.toArray
         expirationR <- expirationCodec.decode(textR.remainder)
         expiration = expirationR.value
-      } yield DecodeResult(Single(from, to, protocol, text, expiration), expirationR.remainder)
+      } yield DecodeResult(Single(from, to, text, expiration), expirationR.remainder)
   }
 
   implicit val codec: Codec[Message] =
@@ -174,6 +171,6 @@ object Message {
 
   case class PexResponse(ids: Set[Identifier]) extends Message
 
-  case class Single(from: Identifier, to: Identifier, protocol: Long, text: Array[Byte], expiration: Long) extends Message
+  case class Single(from: Identifier, to: Identifier, text: Array[Byte], expiration: Long) extends Message
 
 }

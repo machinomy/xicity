@@ -14,7 +14,7 @@ class Client(kernel: Kernel.Wrap, parameters: Parameters) extends Actor with Act
 
   override def receive: Receive = {
     case message: Message.Single =>
-      kernel.didReceive(message.from, message.to, message.protocol, message.text, message.expiration)
+      kernel.didReceive(message.from, message.to, message.text, message.expiration)
     case something => throw new IllegalArgumentException(s"Got unexpected $something")
   }
 }
