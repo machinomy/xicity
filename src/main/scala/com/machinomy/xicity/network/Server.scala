@@ -1,18 +1,30 @@
 package com.machinomy.xicity.network
 
+import java.net.{InetAddress, NetworkInterface}
+
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import com.machinomy.xicity.mac
+import com.machinomy.xicity.mac.Address
+
+import scala.collection.JavaConversions._
+import scala.util.{Failure, Success, Try}
 
 class Server(node: Kernel.Wrap, parameters: mac.Parameters) extends Actor with ActorLogging {
-  var serverActorOpt: Option[ActorRef] = None
-  var serverBehaviorActorOpt: Option[ActorRef] = None
+  var serverActors: Set[ActorRef] = Set.empty
 
   override def preStart(): Unit = {
-    val serverBehaviorActor = context.actorOf(mac.ServerBehavior.props(node, parameters), "server-behavior")
-    serverBehaviorActorOpt = Some(serverBehaviorActor)
-    val serverBehaviorWrap = mac.Server.BehaviorWrap(serverBehaviorActor)
-    val serverActor = context.actorOf(mac.Server.props(parameters.serverAddress, serverBehaviorWrap), "server")
-    serverActorOpt = Some(serverActor)
+    Server.addresses match {
+      case Success(addresses) =>
+        log.info(s"Listening on ${addresses.size} interfaces")
+        for (inetAddress <- addresses) {
+          val address = Address(inetAddress, parameters.port)
+          val serverBehaviorActor = context.actorOf(mac.ServerBehavior.props(node, parameters))
+          val serverBehaviorWrap = mac.Server.BehaviorWrap(serverBehaviorActor)
+          val serverActor = context.actorOf(mac.Server.props(address, serverBehaviorWrap))
+          serverActors += serverActor
+        }
+      case Failure(exception) => throw exception
+    }
   }
 
   override def receive: Receive = {
@@ -28,6 +40,15 @@ object Server extends NodeCompanion[Server] {
 
   def props(node: Kernel.Wrap, parameters: mac.Parameters) =
     Props(classOf[Server], node, parameters)
+
+  def addresses: Try[Set[InetAddress]] = Try {
+    val addresses = for {
+      interface <- NetworkInterface.getNetworkInterfaces if interface.isUp
+      address <- interface.getInetAddresses
+    } yield address
+    addresses.toSet
+  }
+
 
 
   implicit val companion: NodeCompanion[Server] = this
