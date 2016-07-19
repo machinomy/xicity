@@ -1,5 +1,7 @@
 package com.machinomy.xicity.mac
 
+import java.net.InetAddress
+
 import akka.util.Timeout
 
 import scala.concurrent.duration._
@@ -9,7 +11,8 @@ case class Parameters(port: Int,
                       threshold: Byte,
                       tickInterval: FiniteDuration,
                       tickInitialDelay: FiniteDuration,
-                      timeout: Timeout)
+                      timeout: Timeout,
+                      bindAddress: Option[InetAddress])
 
 object Parameters {
   val DEFAULT_PORT = 4240
@@ -20,6 +23,7 @@ object Parameters {
     threshold = 8,
     tickInterval = 3.seconds,
     tickInitialDelay = 1.seconds,
-    timeout = Timeout(10.seconds)
+    timeout = Timeout(10.seconds),
+    bindAddress = None
   )
 }

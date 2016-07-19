@@ -13,7 +13,7 @@ class Server(node: Kernel.Wrap, parameters: mac.Parameters) extends Actor with A
   var serverActors: Set[ActorRef] = Set.empty
 
   override def preStart(): Unit = {
-    Server.addresses match {
+    Server.addresses(parameters) match {
       case Success(addresses) =>
         log.info(s"Listening on ${addresses.size} interfaces")
         for (inetAddress <- addresses) {
@@ -41,12 +41,17 @@ object Server extends NodeCompanion[Server] {
   def props(node: Kernel.Wrap, parameters: mac.Parameters) =
     Props(classOf[Server], node, parameters)
 
-  def addresses: Try[Set[InetAddress]] = Try {
-    val addresses = for {
-      interface <- NetworkInterface.getNetworkInterfaces if interface.isUp
-      address <- interface.getInetAddresses
-    } yield address
-    addresses.toSet
+  def addresses(parameters: mac.Parameters): Try[Set[InetAddress]] = Try {
+    parameters.bindAddress match {
+      case Some(bindAddress) =>
+        Set(bindAddress)
+      case None =>
+        for {
+          interface <- NetworkInterface.getNetworkInterfaces.toSet
+          if interface.isUp
+          address <- interface.getInetAddresses
+        } yield address
+    }
   }
 
 

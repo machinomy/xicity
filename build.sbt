@@ -15,7 +15,8 @@ libraryDependencies ++= Seq(
   "com.github.nscala-time" %% "nscala-time" % "2.10.0",
   "org.slf4j" % "slf4j-simple" % "1.7.21",
   "org.scalatest" %% "scalatest" % "2.2.6" % "test",
-  "com.typesafe.scala-logging" %% "scala-logging" % "3.1.0"
+  "com.typesafe.scala-logging" %% "scala-logging" % "3.1.0",
+  "com.github.scopt" %% "scopt" % "3.5.0"
 )
 
 def doIfNotSnapshot(step: ReleaseStep) = {
