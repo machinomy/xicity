@@ -150,17 +150,6 @@ object Message {
       .typecase(4, implicitly[Codec[PexResponse]])
       .typecase(5, implicitly[Codec[Single]])
 
-  def encode[A <: Message](message: A): Array[Byte] = codec.encode(message).toOption match {
-    case Some(bitVector) => bitVector.toByteArray
-    case None => throw new FailedEncodingError(s"Can not encode ${message.toString}")
-  }
-
-  def decode(bytes: Array[Byte]): Option[Message] = codec.decode(BitVector(bytes)).toOption.map { decodeResult =>
-    decodeResult.value
-  }
-
-  case class FailedEncodingError(message: String) extends Error(message)
-
   sealed trait Message
 
   case class Hello(remoteAddress: Address, nonce: Int = new Random().nextInt) extends Message

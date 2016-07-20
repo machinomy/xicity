@@ -4,6 +4,7 @@ import java.net.InetSocketAddress
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.io.Tcp
+import com.machinomy.xicity.encoding.Bytes
 
 class Connection(endpoint: Endpoint, behavior: Connection.BehaviorWrap) extends Actor with ActorLogging {
   override def receive: Receive = {
@@ -23,7 +24,7 @@ class Connection(endpoint: Endpoint, behavior: Connection.BehaviorWrap) extends 
       behavior.didDisconnect()
       context.stop(self)
     case Tcp.Received(byteString) =>
-      Message.decode(byteString.toArray) match {
+      Bytes.decode[Message.Message](byteString.toArray) match {
         case Some(message) =>
           behavior.didRead(message)
         case None =>
