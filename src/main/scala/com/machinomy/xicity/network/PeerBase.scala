@@ -13,7 +13,7 @@ class PeerBase[A](identifier: Identifier, callback: ActorRef, parameters: Parame
   override def preStart(): Unit = {
     kernelActor = context.actorOf(Kernel.props(identifier, self), s"kernel-${identifier.number}")
     val kernelWrap = Kernel.Wrap(kernelActor, parameters)
-    nodeActor = context.actorOf(companion.props(kernelWrap, parameters), "client-node")
+    nodeActor = context.actorOf(companion.props(kernelWrap, parameters), "node")
   }
 
   override def receive: Receive = {
