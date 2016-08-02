@@ -68,7 +68,10 @@ class OutgoingConnectionBehavior(kernel: Kernel.Wrap, parameters: Parameters) ex
       for (endpoint <- endpointOpt) {
         endpoint.write(message)
       }
-    case something => log.error(s"Got $something")
+    case m: Message.Single =>
+      kernel.didReceive(m.from, m.to, m.text, m.expiration)
+    case something =>
+      log.error(s"Got $something")
   }
 
   override def postStop(): Unit =

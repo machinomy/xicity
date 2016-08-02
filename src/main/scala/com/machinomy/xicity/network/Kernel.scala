@@ -21,14 +21,14 @@ class Kernel(identifier: Identifier, peerOpt: Option[ActorRef]) extends Actor wi
       log.info(s"Removing connection behavior for $endpoint")
       runningConnectionBehaviors -= endpoint
     case Kernel.DidPex(endpoint, identifiers) =>
-      log.info(s"DidPex: $endpoint, $identifiers")
+      //log.info(s"DidPex: $endpoint, $identifiers")
       routingTable += (endpoint -> identifiers)
       if (routingTable.mapping.nonEmpty && !isReady) {
         for (peer <- peerOpt) peer ! Peer.IsReady()
         isReady = true
       }
     case Kernel.GetIdentifiers(exceptEndpoint) =>
-      log.info(s"Getting identifiers except $exceptEndpoint")
+      //log.info(s"Getting identifiers except $exceptEndpoint")
       val identifiers = routingTable.identifiers(exceptEndpoint) + identifier
       sender ! identifiers
     case Kernel.DidReceiveShot(from, to, text, expiration: Long) =>
@@ -58,7 +58,8 @@ class Kernel(identifier: Identifier, peerOpt: Option[ActorRef]) extends Actor wi
   def receiveToSelf(from: Identifier, to: Identifier, text: Array[Byte], expiration: Long): Unit = {
     val message = Message.Single(from, to, text, expiration)
     log.info(s"Received $message to myself")
-    for (peer <- peerOpt) peer ! message
+    val callbackMessage = Peer.Received(from, text, expiration)
+    for (peer <- peerOpt) peer ! callbackMessage
   }
 }
 
