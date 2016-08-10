@@ -21,6 +21,8 @@ class Peer extends Actor with ActorLogging {
       log.info("NODEISREADY")
     case m: Message.Single =>
       log.info(s"RECEIVEDSHOT $m")
+    case something =>
+      log.info(s"Received $something")
   }
 
   override def postStop(): Unit = {

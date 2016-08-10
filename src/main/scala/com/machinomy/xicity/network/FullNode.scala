@@ -15,8 +15,8 @@ class FullNode(kernel: Kernel.Wrap, parameters: Parameters) extends Actor with A
   }
 
   override def receive: Receive = {
-    case message: Message.Single =>
-      kernel.didReceive(message.from, message.to, message.text, message.expiration)
+    case message: Message.Meaningful =>
+      kernel.passDownstream(message)
     case something => throw new IllegalArgumentException(s"Got unexpected $something")
   }
 }

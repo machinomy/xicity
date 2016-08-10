@@ -9,6 +9,8 @@ object ClientApp extends App {
     override def receive: Receive = {
       case Peer.IsReady() =>
         log.info(s"Ready to transmit messages")
+      case something =>
+        log.info(s"RECEIVED $something")
     }
   }
 

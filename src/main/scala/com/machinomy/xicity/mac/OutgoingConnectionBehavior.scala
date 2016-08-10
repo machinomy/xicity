@@ -68,10 +68,10 @@ class OutgoingConnectionBehavior(kernel: Kernel.Wrap, parameters: Parameters) ex
       for (endpoint <- endpointOpt) {
         endpoint.write(message)
       }
-    case m: Message.Single =>
-      kernel.didReceive(m.from, m.to, m.text, m.expiration)
+    case message: Message.Meaningful =>
+      kernel.passDownstream(message)
     case something =>
-      log.error(s"Got $something")
+      throw new IllegalArgumentException(s"Received unexpected $something")
   }
 
   override def postStop(): Unit =

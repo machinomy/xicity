@@ -28,38 +28,36 @@ class Kernel(identifier: Identifier, peerOpt: Option[ActorRef]) extends Actor wi
         isReady = true
       }
     case Kernel.GetIdentifiers(exceptEndpoint) =>
-      //log.info(s"Getting identifiers except $exceptEndpoint")
       val identifiers = routingTable.identifiers(exceptEndpoint) + identifier
       sender ! identifiers
-    case Kernel.DidReceiveShot(from, to, text, expiration: Long) =>
-      log.info(s"Received message: $from -> $to")
-      if (expiration > DateTime.now.getMillis / 1000) {
-        if (to == identifier) {
-          receiveToSelf(from, to, text, expiration)
+    case message: Message.Meaningful =>
+      log.info(s"Received message: ${message.from} -> ${message.to}")
+      if (message.expiration > DateTime.now) {
+        if (message.to == identifier) {
+          passDownstream(message)
         } else {
-          relay(from, to, text, expiration)
+          relay(message)
         }
       } else {
-        log.info(s"Message $from -> $to is expired")
+        log.info(s"Message ${message.from} -> ${message.to} is expired")
       }
+    case something =>
+      throw new IllegalArgumentException(s"Received unexpected $something")
   }
 
-  def relay(from: Identifier, to: Identifier, text: Array[Byte], expiration: Long): Unit = {
-    log.info(s"Relaying Single from $from to $to")
+  def relay(message: Message.Meaningful): Unit = {
     for {
-      endpoint <- routingTable.closestEndpoints(to, identifier)
+      endpoint <- routingTable.closestEndpoints(message.to, identifier)
       connectionBehavior <- runningConnectionBehaviors.get(endpoint)
     } {
-      log.info(s"Sending Single to $endpoint")
-      connectionBehavior.doWrite(Message.Single(from, to, text, expiration))
+      log.info(s"Relaying message to $endpoint")
+      connectionBehavior.doWrite(message)
     }
   }
 
-  def receiveToSelf(from: Identifier, to: Identifier, text: Array[Byte], expiration: Long): Unit = {
-    val message = Message.Single(from, to, text, expiration)
+  def passDownstream(message: Message.Meaningful): Unit = {
     log.info(s"Received $message to myself")
-    val callbackMessage = Peer.Received(from, text, expiration)
-    for (peer <- peerOpt) peer ! callbackMessage
+    for (peer <- peerOpt) peer ! Peer.Received(message)
   }
 }
 
@@ -68,7 +66,6 @@ object Kernel {
   case class DidAddConnection(endpoint: Endpoint, connectionBehavior: Connection.BehaviorWrap) extends Event
   case class DidRemoveConnection(endpoint: Endpoint) extends Event
   case class DidPex(endpoint: Endpoint, identifiers: Set[Identifier]) extends Event
-  case class DidReceiveShot(from: Identifier, to: Identifier, text: Array[Byte], expiration: Long) extends Command
 
   sealed trait Command extends Event
   case class GetIdentifiers(except: Endpoint) extends Command
@@ -84,8 +81,8 @@ object Kernel {
       actorRef ! DidPex(endpoint, identifiers)
     def getIdentifiers(except: Endpoint)(implicit context: ActorContext): Future[Set[Identifier]] =
       (actorRef ? GetIdentifiers(except: Endpoint)).mapTo[Set[Identifier]]
-    def didReceive(from: Identifier, to: Identifier, text: Array[Byte], expiration: Long)(implicit context: ActorContext): Unit =
-      actorRef ! DidReceiveShot(from, to, text, expiration)
+    def passDownstream(message: Message.Meaningful)(implicit context: ActorContext): Unit =
+      actorRef ! message
   }
 
   def props(identifier: Identifier, peer: ActorRef) = Props(classOf[Kernel], identifier, Some(peer))

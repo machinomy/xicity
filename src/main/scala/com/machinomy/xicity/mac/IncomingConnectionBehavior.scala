@@ -38,6 +38,10 @@ class IncomingConnectionBehavior(kernel: Kernel.Wrap, parameters: Parameters) ex
   }
 
   def expectMessages: Receive = {
+    case Connection.DoWrite(message) =>
+      for (endpoint <- endpointOpt) {
+        endpoint.write(message)
+      }
     case Message.Pex(identifiers) =>
       for (endpoint <- endpointOpt) {
         kernel.didPex(endpoint, identifiers)
@@ -47,12 +51,8 @@ class IncomingConnectionBehavior(kernel: Kernel.Wrap, parameters: Parameters) ex
       for (endpoint <- endpointOpt) {
         kernel.didPex(endpoint, identifiers)
       }
-    case Connection.DoWrite(message) =>
-      for (endpoint <- endpointOpt) {
-        endpoint.write(message)
-      }
-    case message: Message.Single =>
-      kernel.didReceive(message.from, message.to, message.text, message.expiration)
+    case message: Message.Meaningful  =>
+      kernel.passDownstream(message)
   }
 
   override def postStop(): Unit =

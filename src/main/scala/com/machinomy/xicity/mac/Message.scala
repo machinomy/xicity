@@ -2,6 +2,7 @@ package com.machinomy.xicity.mac
 
 import java.net.InetAddress
 
+import com.github.nscala_time.time.Imports._
 import com.machinomy.xicity.Identifier
 import scodec._
 import scodec.bits.{ByteVector, _}
@@ -115,9 +116,14 @@ object Message {
         idsList = idsListR.value
       } yield DecodeResult(PexResponse(idsList.toSet), idsListR.remainder)
   }
-  implicit val shotCodec = new Codec[Single] {
-    val textCodec = variableSizeBytes(int32L, bytes)
-    val expirationCodec = long(64)
+
+  implicit def dateTimeToLong(dateTime: DateTime): Long = dateTime.getMillis / 1000
+
+  val textCodec = variableSizeBytes(int32L, bytes)
+  val expirationCodec = long(64)
+  val idCodec = int32L
+
+  implicit val singleCodec = new Codec[Single] {
     override def encode(value: Single): Attempt[BitVector] =
       for {
         fromBytes <- identifierCodec.encode(value.from)
@@ -138,8 +144,64 @@ object Message {
         textR <- textCodec.decode(toR.remainder)
         text = textR.value.toArray
         expirationR <- expirationCodec.decode(textR.remainder)
-        expiration = expirationR.value
+        expiration = new DateTime(expirationR.value * 1000)
       } yield DecodeResult(Single(from, to, text, expiration), expirationR.remainder)
+  }
+
+  implicit val requestCodec = new Codec[Request] {
+    override def decode(bits: BitVector): Attempt[DecodeResult[Request]] =
+      for {
+        fromR <- identifierCodec.decode(bits)
+        from = fromR.value
+        toR <- identifierCodec.decode(fromR.remainder)
+        to = toR.value
+        textR <- textCodec.decode(toR.remainder)
+        text = textR.value.toArray
+        expirationR <- expirationCodec.decode(textR.remainder)
+        expiration = new DateTime(expirationR.value * 1000)
+        idR <- idCodec.decode(textR.remainder)
+        id = idR.value
+      } yield DecodeResult(Request(from, to, text, expiration, id), idR.remainder)
+
+    override def encode(value: Request): Attempt[BitVector] =
+      for {
+        fromBytes <- identifierCodec.encode(value.from)
+        toBytes <- identifierCodec.encode(value.to)
+        textBytes <- textCodec.encode(ByteVector(value.text))
+        expirationBytes <- expirationCodec.encode(value.expiration)
+        idBytes <- idCodec.encode(value.id)
+      } yield fromBytes ++ toBytes ++ textBytes ++ expirationBytes ++ idBytes
+
+    override def sizeBound: SizeBound =
+      identifierCodec.sizeBound + identifierCodec.sizeBound + textCodec.sizeBound + expirationCodec.sizeBound + idCodec.sizeBound
+  }
+
+  implicit val responseCodec = new Codec[Response] {
+    override def decode(bits: BitVector): Attempt[DecodeResult[Response]] =
+      for {
+        fromR <- identifierCodec.decode(bits)
+        from = fromR.value
+        toR <- identifierCodec.decode(fromR.remainder)
+        to = toR.value
+        textR <- textCodec.decode(toR.remainder)
+        text = textR.value.toArray
+        expirationR <- expirationCodec.decode(textR.remainder)
+        expiration = new DateTime(expirationR.value * 1000)
+        idR <- idCodec.decode(textR.remainder)
+        id = idR.value
+      } yield DecodeResult(Response(from, to, text, expiration, id), idR.remainder)
+
+    override def encode(value: Response): Attempt[BitVector] =
+      for {
+        fromBytes <- identifierCodec.encode(value.from)
+        toBytes <- identifierCodec.encode(value.to)
+        textBytes <- textCodec.encode(ByteVector(value.text))
+        expirationBytes <- expirationCodec.encode(value.expiration)
+        idBytes <- idCodec.encode(value.id)
+      } yield fromBytes ++ toBytes ++ textBytes ++ expirationBytes ++ idBytes
+
+    override def sizeBound: SizeBound =
+      identifierCodec.sizeBound + identifierCodec.sizeBound + textCodec.sizeBound + expirationCodec.sizeBound + idCodec.sizeBound
   }
 
   implicit val codec: Codec[Message] =
@@ -149,6 +211,8 @@ object Message {
       .typecase(3, implicitly[Codec[Pex]])
       .typecase(4, implicitly[Codec[PexResponse]])
       .typecase(5, implicitly[Codec[Single]])
+      .typecase(6, implicitly[Codec[Request]])
+      .typecase(7, implicitly[Codec[Response]])
 
   sealed trait Message
 
@@ -160,6 +224,28 @@ object Message {
 
   case class PexResponse(ids: Set[Identifier]) extends Message
 
-  case class Single(from: Identifier, to: Identifier, text: Array[Byte], expiration: Long) extends Message
+  sealed abstract class Meaningful(val from: Identifier,
+                                   val to: Identifier,
+                                   val text: Array[Byte],
+                                   val expiration: DateTime) extends Message
 
+  case class Single(override val from: Identifier,
+                    override val to: Identifier,
+                    override val text: Array[Byte],
+                    override val expiration: DateTime)
+    extends Meaningful(from, to, text, expiration)
+
+  case class Request(override val from: Identifier,
+                     override val to: Identifier,
+                     override val text: Array[Byte],
+                     override val expiration: DateTime,
+                     id: Int)
+    extends Meaningful(from, to, text, expiration)
+
+  case class Response(override val from: Identifier,
+                      override val to: Identifier,
+                      override val text: Array[Byte],
+                      override val expiration: DateTime,
+                      id: Int)
+    extends Meaningful(from, to, text, expiration)
 }
