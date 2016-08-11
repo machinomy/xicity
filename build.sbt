@@ -12,6 +12,7 @@ mainClass in assembly := Some("com.machinomy.xicity.examples.SeedApp")
 libraryDependencies ++= Seq(
   "org.scodec" %% "scodec-core" % "1.9.0",
   "com.typesafe.akka" %% "akka-actor" % "2.4.8",
+  "com.typesafe.akka" %% "akka-http-experimental" % "2.4.8",
   "com.github.nscala-time" %% "nscala-time" % "2.10.0",
   "org.slf4j" % "slf4j-simple" % "1.7.21",
   "org.scalatest" %% "scalatest" % "2.2.6" % "test",
