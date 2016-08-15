@@ -14,7 +14,7 @@ object SuperNode extends App {
     override def threshold: Byte = Parameters.default.threshold
     override def tickInterval: FiniteDuration = Parameters.default.tickInterval
     override def tickInitialDelay: FiniteDuration = Parameters.default.tickInitialDelay
-    override def serverAddress: Address = Address("45.55.122.116")
+    override def serverAddress: Address = Address("127.0.0.1")
     override def seeds: Set[Address] = Set.empty
     override def timeout: Timeout = Parameters.default.timeout
     override def port: Int = Parameters.default.port
