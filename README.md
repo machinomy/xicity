@@ -2,14 +2,16 @@
 
 Xicity is a distributed communications protocol, and library. It is intended to be secure, fast, and low profile.
 
-# Features
+## Features
 - [x] Asynchronous I/O
 - [ ] Request/reply pattern
 - [ ] Streaming
 - [ ] Resource-optimized wire format
 - [ ] Resilience
 
-# Usage
+## Usage
+
+### Client
 
 The starting point is PeerBase class. It acts as a gateway to the network. To create an instance of peer base, pass the peer identifier, network parameters, and the callback actorRef. The latter is notified every time a message is received by the peer.
 
@@ -67,6 +69,21 @@ override def receive: Receive = {
   case something =>
     log info s"RECEIVED $something"
 }
+```
+
+### Super node
+
+Super node is a client that accepts connections on a predefined IP, and connects to other seed nodes.
+`com.machinomy.xicity.examples.SeedApp` is responsible for just that. It is declared as a main class for a compiled JAR.
+Whenever you run the jar, it starts the super node. To bind the node to an address, use key `-b` or `--bind`
+```
+$ java xicity.jar --bind 127.0.0.1
+```
+
+The SeedApp powers super nodes run by Machinomy. As you would like not to connect the node to itself, use `-x` or `--exclude` key
+to exclude the corresponding addresses from the seeds. Say, you would like to run the super node at adress 45.45.45.45, and the address is a well known seed node:
+```
+$ java xicity.jar --bind 45.45.45.45 --exclude 45.45.45.45 
 ```
 
 # Call stack
