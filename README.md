@@ -86,6 +86,8 @@ to exclude the corresponding addresses from the seeds. Say, you would like to ru
 $ java xicity.jar --bind 45.45.45.45 --exclude 45.45.45.45 
 ```
 
+If you run the super node on your local machine, you could forget about exclude switch.
+
 # Call stack
 
 ## Server
