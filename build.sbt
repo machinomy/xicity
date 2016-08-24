@@ -49,8 +49,8 @@ releaseProcess := Seq[ReleaseStep](
 
 publishTo := {
   if (isSnapshot.value)
-    Some("Machinomy" at "http://machinomy.com:8081/artifactory/libs-snapshot-local;build.timestamp=" + new java.util.Date().getTime)
+    Some("Machinomy" at "http://artifactory.machinomy.com/artifactory/libs-snapshot-local;build.timestamp=" + new java.util.Date().getTime)
   else
-    Some("Machinomy" at "http://machinomy.com:8081/artifactory/libs-release-local/")
+    Some("Machinomy" at "http://artifactory.machinomy.com/artifactory/libs-release-local/")
 }
 credentials += Credentials(new File("credentials.properties"))
