@@ -9,7 +9,7 @@ scalaVersion := "2.11.8"
 
 organization := "com.machinomy"
 
-mainClass in assembly := Some("com.machinomy.xicity.examples.SeedApp")
+mainClass := Some("com.machinomy.xicity.examples.SeedApp")
 
 libraryDependencies ++= Seq(
   "org.scodec" %% "scodec-core" % "1.9.0",
