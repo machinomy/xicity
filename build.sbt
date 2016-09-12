@@ -1,7 +1,9 @@
-import sbtrelease.ReleasePlugin.autoImport.ReleaseKeys._
+import de.heikoseeberger.sbtheader.license.Apache2_0
 import sbtrelease.ReleaseStateTransformations._
 
 name := "xicity"
+
+version := "0.0.4-SNAPSHOT"
 
 scalaVersion := "2.11.8"
 
@@ -19,38 +21,38 @@ libraryDependencies ++= Seq(
   "com.github.scopt" %% "scopt" % "3.5.0"
 )
 
-def doIfNotSnapshot(step: ReleaseStep) = {
-  ReleaseStep(
-    action = st => {
-      if (!st.get(versions).getOrElse((None, None))._1.toString.endsWith("-SNAPSHOT")) {
-        step.action(st)
-      } else {
-        st
-      }
-    },
-    check = step.check,
-    enableCrossBuild = step.enableCrossBuild
-  )
-}
+def whenRelease(releaseStep: ReleaseStep): ReleaseStep =
+  releaseStep.copy(state => if (Project.extract(state).get(isSnapshot)) state else releaseStep.action(state))
 
 releaseProcess := Seq[ReleaseStep](
   checkSnapshotDependencies,
-  inquireVersions,
   runClean,
   runTest,
-  doIfNotSnapshot(setReleaseVersion),
-  doIfNotSnapshot(commitReleaseVersion),
-  doIfNotSnapshot(tagRelease),
+  whenRelease(tagRelease),
   publishArtifacts,
-  doIfNotSnapshot(setNextVersion),
-  doIfNotSnapshot(commitNextVersion),
-  doIfNotSnapshot(pushChanges)
+  whenRelease(pushChanges)
 )
 
 publishTo := {
-  if (isSnapshot.value)
-    Some("Machinomy" at "http://artifactory.machinomy.com/artifactory/libs-snapshot-local;build.timestamp=" + new java.util.Date().getTime)
-  else
-    Some("Machinomy" at "http://artifactory.machinomy.com/artifactory/libs-release-local/")
+  val base = "http://artifactory.machinomy.com/artifactory"
+  if (isSnapshot.value) {
+    val timestamp = new java.util.Date().getTime
+    Some("Machinomy" at s"$base/snapshot;build.timestamp=$timestamp")
+  } else {
+    Some("Machinomy" at s"$base/release")
+  }
 }
+
 credentials += Credentials(new File("credentials.properties"))
+
+licenses := Seq("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0"))
+
+headers := Map(
+  "scala" -> Apache2_0("2016", "Machinomy")
+)
+
+autoAPIMappings := true
+
+scalacOptions := Seq("-feature")
+
+scalacOptions in (Compile,doc) ++= Seq("-groups", "-implicits")
