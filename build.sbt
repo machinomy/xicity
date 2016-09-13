@@ -21,6 +21,8 @@ libraryDependencies ++= Seq(
   "com.github.scopt" %% "scopt" % "3.5.0"
 )
 
+releaseUseGlobalVersion := false
+
 def whenRelease(releaseStep: ReleaseStep): ReleaseStep =
   releaseStep.copy(state => if (Project.extract(state).get(isSnapshot)) state else releaseStep.action(state))
 
