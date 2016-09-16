@@ -47,7 +47,7 @@ class Kernel(identifier: Identifier, peerOpt: Option[ActorRef]) extends Actor wi
       val identifiers = routingTable.identifiers(exceptEndpoint) + identifier
       sender ! identifiers
     case message: Message.Meaningful =>
-      //log.info(s"Received message: ${message.from} -> ${message.to}")
+      log.info(s"Received message: ${message.from} -> ${message.to}")
       if (message.expiration > DateTime.now) {
         if (message.to == identifier) {
           passDownstream(message)
@@ -66,7 +66,7 @@ class Kernel(identifier: Identifier, peerOpt: Option[ActorRef]) extends Actor wi
       endpoint <- routingTable.closestEndpoints(message.to, Set(identifier, message.from))
       connectionBehavior <- runningConnectionBehaviors.get(endpoint)
     } {
-      log.info(s"Relaying message to $endpoint")
+      log.info(s"Relaying message ${message.from} -> ${message.to} to $endpoint")
       connectionBehavior.doWrite(message)
     }
   }
