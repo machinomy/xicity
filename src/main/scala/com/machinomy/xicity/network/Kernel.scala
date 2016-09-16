@@ -51,7 +51,9 @@ class Kernel(identifier: Identifier, peerOpt: Option[ActorRef]) extends Actor wi
       if (message.expiration > DateTime.now) {
         println(s"TO: ${message.to}")
         println(s"IDENTIFIER: $identifier")
-        if (message.to == identifier) {
+        println(s"TO BIGINT: ${message.to.number}")
+        println(s"IDENTIFIER BIGINT: ${identifier.number}")
+        if (message.to.number == identifier.number) {
           passDownstream(message)
         } else {
           relay(message)
