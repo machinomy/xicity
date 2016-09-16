@@ -73,7 +73,7 @@ object Message {
     override def decode(bits: BitVector): Attempt[DecodeResult[Identifier]] =
       for {
         bigIntBytesR <- bytesCodec.decode(bits)
-        bigIntBytes = bigIntBytesR.value.toArray
+        bigIntBytes = bigIntBytesR.value.toArray.dropWhile(_ == 0)
       } yield DecodeResult(Identifier(BigInt(bigIntBytes)), bigIntBytesR.remainder)
   }
   implicit val helloCodec = new Codec[Hello] {
