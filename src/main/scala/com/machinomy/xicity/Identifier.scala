@@ -20,6 +20,8 @@ import scala.util.Random
 
 case class Identifier(number: BigInt) {
   assert(Identifier.isOk(this))
+
+  override def toString: String = s"Identifier(${number.toByteArray.map("%02x".format(_)).mkString})"
 }
 
 object Identifier {
