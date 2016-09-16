@@ -63,7 +63,7 @@ class Kernel(identifier: Identifier, peerOpt: Option[ActorRef]) extends Actor wi
 
   def relay(message: Message.Meaningful): Unit = {
     for {
-      endpoint <- routingTable.closestEndpoints(message.to, Set(identifier, message.from))
+      endpoint <- routingTable.closestEndpoints(message.to, identifier)
       connectionBehavior <- runningConnectionBehaviors.get(endpoint)
     } {
       log.info(s"Relaying message ${message.from} -> ${message.to} to $endpoint")
