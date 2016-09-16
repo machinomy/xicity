@@ -45,9 +45,11 @@ case class RoutingTable(mapping: Map[Endpoint, Set[Identifier]]) {
     }
   }
 
-  def closestEndpoints(id: Identifier, exclude: Identifier, n: Int = 1): Set[Endpoint] = {
+  def closestEndpoints(id: Identifier, exclude: Identifier, n: Int): Set[Endpoint] =
     closestEndpoints(id, Set(exclude), n)
-  }
+
+  def closestEndpoints(id: Identifier, exclude: Identifier): Set[Endpoint] =
+    closestEndpoints(id, exclude, 1)
 
   def closestEndpoints(id: Identifier, exclude: Set[Identifier], n: Int = 1): Set[Endpoint] = {
     val a = reverseMapping.keys.toSeq.sortBy(i => Identifier.distance(i, id))
