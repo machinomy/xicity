@@ -49,10 +49,6 @@ class Kernel(identifier: Identifier, peerOpt: Option[ActorRef]) extends Actor wi
     case message: Message.Meaningful =>
       log.info(s"Received message: ${message.from} -> ${message.to}")
       if (message.expiration > DateTime.now) {
-        println(s"TO: ${message.to}")
-        println(s"IDENTIFIER: $identifier")
-        println(s"TO BIGINT: ${message.to.number}")
-        println(s"IDENTIFIER BIGINT: ${identifier.number}")
         if (message.to.number == identifier.number) {
           passDownstream(message)
         } else {
