@@ -64,4 +64,6 @@ case class RoutingTable(mapping: Map[Endpoint, Set[Identifier]]) {
 
 object RoutingTable {
   def empty = RoutingTable(Map.empty)
+
+  def apply(): RoutingTable = RoutingTable(Map.empty[Endpoint, Set[Identifier]])
 }

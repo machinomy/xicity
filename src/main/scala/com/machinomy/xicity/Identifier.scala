@@ -39,5 +39,8 @@ object Identifier {
     Identifier(BigInt(hex2bytes(hex)))
   }
 
-  def distance(a: Identifier, b: Identifier): BigInt = a.number ^ b.number
+  def distance(a: Identifier, b: Identifier): Int = {
+    def ham(b: Byte): Int = (0 to 7).map((i : Int) => (b >>> i) & 1).sum
+    (a.number ^ b.number).toByteArray.map(ham).sum
+  }
 }
