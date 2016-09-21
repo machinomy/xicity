@@ -16,8 +16,9 @@
 
 package com.machinomy.xicity.encoding
 
-import scodec.Codec
+import akka.util.ByteString
 import scodec.bits.BitVector
+import scodec.{Codec, DecodeResult}
 
 object Bytes {
   def encode[A: Codec](message: A): Array[Byte] =
@@ -26,8 +27,9 @@ object Bytes {
       case None => throw FailedEncodingError(s"Can not encode ${message.toString}")
     }
 
-  def decode[A: Codec](bytes: Array[Byte]): Option[A] =
-    implicitly[Codec[A]].decode(BitVector(bytes)).toOption.map { decodeResult =>
-      decodeResult.value
-    }
+  def decode[A: Codec](byteString: ByteString): Option[DecodeResult[A]] =
+    decode(byteString.toArray)
+
+  def decode[A: Codec](bytes: Array[Byte]): Option[DecodeResult[A]] =
+    implicitly[Codec[A]].decode(BitVector(bytes)).toOption
 }

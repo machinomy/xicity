@@ -20,9 +20,13 @@ import java.net.InetSocketAddress
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.io.Tcp
+import akka.util.ByteString
 import com.machinomy.xicity.encoding.Bytes
 
 class Connection(endpoint: Endpoint, behavior: Connection.BehaviorWrap) extends Actor with ActorLogging {
+  var buffer: Array[Byte] = Array.empty[Byte]
+  val MAX_BUFFER_LENGTH = 16384
+
   override def receive: Receive = {
     case Tcp.Connected(remoteAddress, localAddress) =>
       log.info(s"Connected to $endpoint via $remoteAddress from $localAddress")
@@ -40,11 +44,18 @@ class Connection(endpoint: Endpoint, behavior: Connection.BehaviorWrap) extends 
       behavior.didDisconnect()
       context.stop(self)
     case Tcp.Received(byteString) =>
-      Bytes.decode[Message.Message](byteString.toArray) match {
-        case Some(message) =>
+      Bytes.decode[Message.Message](buffer ++ byteString) match {
+        case Some(decodeResult) =>
+          val message = decodeResult.value
           behavior.didRead(message)
+          val remainder = decodeResult.remainder
+          self ! Tcp.Received(ByteString(remainder.toByteArray))
         case None =>
           log.error(s"Received ${byteString.length} bytes, can not decode")
+          buffer = buffer ++ byteString
+          if (buffer.length > MAX_BUFFER_LENGTH) {
+            buffer = byteString.toArray
+          }
       }
   }
 }
