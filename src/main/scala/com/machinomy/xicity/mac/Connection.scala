@@ -49,7 +49,7 @@ class Connection(endpoint: Endpoint, behavior: Connection.BehaviorWrap) extends 
           val message = decodeResult.value
           behavior.didRead(message)
           val remainder = decodeResult.remainder
-          self ! Tcp.Received(ByteString(remainder.toByteArray))
+          if (remainder.length > 0) self ! Tcp.Received(ByteString(remainder.toByteArray))
         case None =>
           log.error(s"Received ${byteString.length} bytes, can not decode")
           buffer = buffer ++ byteString
