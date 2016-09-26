@@ -3,7 +3,7 @@ import sbtrelease.ReleaseStateTransformations._
 
 name := "xicity"
 
-version := "0.0.6-SNAPSHOT"
+version := "0.0.6"
 
 scalaVersion := "2.11.8"
 
